@@ -64,6 +64,7 @@ class LinearActivation(ActivationFunction):
     def compute_function_gradient(self,X):
         return np.eye(X.shape[0], X.shape[1])
 
+
 if __name__ == "__main__":
 
     X = np.arange(0,9).reshape(3,3)
