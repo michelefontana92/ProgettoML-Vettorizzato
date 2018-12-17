@@ -32,7 +32,7 @@ class SigmoidActivation(ActivationFunction):
 
     """
     NOTA: LA DERIVATA DI SIGMOIDE E'
-          SIGM(X) * (1 -SIGM(X)
+          SIGM(X) * (1 -SIGM(X))
          ==> LA FUNZIONE DEL GRADIENTE VA CHIAMATA SU X' = SIGMOID(X)
          ==> IN QUESTO MODO NON RICALCOLO DUE VOLTE SIGMOID(X) CHE E' COSTOSO VISTO CHE C'E' DI MEZZO IL
                 CALCOLO DI UN'ESPONENZIALE!!!!!
