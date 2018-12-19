@@ -1,107 +1,131 @@
+"""
+Questo file contiene la classe MLP preposta ad implementare la rete neurale;
+- Ogni elemento è Vettoriazzato
+- Non necessita di classi come Neuron o Layers
+- Usa le classi/file: Utility & ActivationFunction
+
+"""
+
 import numpy as np
+from Utility import *
+from Activation_Functions import *
 
 
 class MLP:
+    # Costruttore classe con stati
+    ## NOTA: Inseriti Pesi con bias
+    def __init__(self,n_feature, n_hidden, n_output, activation_h, activation_o, eta=0.1, lambd=0, alfa=0.75):
+        # Valori scalari
+        #self.n_input = n_input  # righe di X
+        self.n_feature = n_feature  # colonne di X, oppure neuroni input
+        self.n_hidden = n_hidden
+        self.n_output = n_output
 
-    #Pesi già con bias
-    def __init__(self,W_h,W_o):
-        self._W_h = W_h
-        self._W_o = W_o
-        self.out_h = None
-        self.out_o = None
+        # Vettorizzato: Matrici
+        ## NOTA: Indico gli indici delle dimensioni delle matrici/vettori
+        self.W_h = init_Weights(n_hidden, n_feature, fan_in=False, range_start=-0.7,
+                                range_end=0.7)  # (n_neuroni_h x n_feature +1)
+        self.W_o = init_Weights(n_output, n_hidden, fan_in=False, range_start=-0.7,
+                                range_end=0.7)  # (n_neuroni_o x n_neuroni_h +1)
+        self.Out_h = None  # (n_esempi x n_neuroni_h)
+        self.Out_o = None  # (n_esempi x n_neuroni_o) //Per Monk quindi è un vettore
+        self.Net_h = None  # (n_esempi x n_neuroni_h)
+        self.Net_o = None  # (n_esempi x n_neuroni_o) //Per Monk quindi è un vettore
 
-        self._dW_o_old = np.zeros(W_o.shape)
-        self._dW_h_old = np.zeros(W_h.shape)
+        # Si specifica il tipo di f. attivazione dei neuroni
+        self.activation_h = activation_h
+        self.activation_o = activation_o
+
+        # Hyperparameter!
+        self.eta = eta  # learning rate
+        self.lambd = lambd  # regolarizzazione-penalityTerm
+        self.alfa = alfa  # momentum
+
+        # Lista per avere il plot LC & Accuracy
+        ## NOTA: Ultimi elementi della lista sono utili per la fase Grid Search 
+        self.errors_tr = []
+        self.accuracies_tr = []
+        self.errors_vl = []
+        self.accuracies_vl = []
+
+        # Servono nella fase di train->backperopagation; delta vecchio dei pesi hidden e output
+        self._dW_o_old = np.zeros(self.W_o.shape)
+        self._dW_h_old = np.zeros(self.W_h.shape)
 
     # X già con bias
-    def feedforward(self,X):
+    def feedforward(self, X):
+        # Calcolo hidden layer
+        self.Net_h = np.dot(X, self.W_h.T)
+        self.Out_h = self.activation_h.compute_function(self.Net_h)  # Output_h=f(Net_h)
 
-        net_h = np.dot(X,self._W_h.T)
-        #f(net_h)
+        # Calcolo output layer
+        Out_h_bias = addBias(self.Out_h)
+        self.Net_o = np.dot(Out_h_bias, self.W_o.T)
+        self.Out_o = self.activation_o.compute_function(
+            self.Net_o)  # Output_o=f(Net_o)=>Classificazione rete; Per Monk è vettore
 
-        self.out_h = net_h #DA AGGIORNARE
+    # X già con bias
+    def backpropagation(self, X, T):
+        assert T.shape == self.Out_o.shape
 
-        #print("net_h",net_h.shape)
+        # Calcolo della f'(Net_o), calcolo delta_neuroneOutput, calcolo delta peso
+        ## NOTA: vedere slide Backprop.
+        grad_f_o = self.activation_o.compute_function_gradient(self.Out_o)
+        diff = (T - self.Out_o)
+        delta_o = np.multiply(diff, grad_f_o)  # elemento-per-elemento
+        Out_h_bias = addBias(self.Out_h)
+        delta_W_o = np.dot(delta_o.T, Out_h_bias)
 
-        net = np.ones((net_h.shape[0],net_h.shape[1] +1))
-        net[:,1:] = net_h
-        #print("net con bias", net)
-        net_o = np.dot(net,self._W_o.T)
+        # Calcolo della f'(Net_h), calcolo delta_o*pesi_interessati, calcolo delta hidden layer
+        ## NOTA: vedere slide Backprop.
+        grad_f_h = self.activation_h.compute_function_gradient(self.Out_h)
+        W_o_nobias = removeBias(self.W_o)
+        sp_h = np.dot(delta_o, W_o_nobias)
+        delta_h = np.multiply(sp_h, grad_f_h)  # elemento-per-elemento
+        delta_W_h = np.dot(delta_h.T, X)
 
-        self.out_o = net_o #DA AGGIORNARE
+        return delta_W_o /X.shape[0], delta_W_h / X.shape[0]
 
-    def backpropagation(self,X,T):
+    # Train usando la Backprop: The Basic Alg. (vedi Slide Corso ML)
+    ## NOTA: solo lista error_tr è stata sviluppata per vedere sul Monk2 LearningCurve e se ok!! IL RESTO TODO...
+    def train(self, X, T, n_epochs=1000, eps=10 ^ (-3)):
+        assert X.shape[0] == T.shape[0]
+        # 1) Init pesi e iperparametri // fatto nel costruttore
 
-        delta_o = (T-self.out_o) #f'(net_o)****************
-        #print("delta_o",delta_o)
+        # 4) Condizioni di arresto
+        error_MSE = 100
+        for epoch in range(n_epochs):
 
-        out_h_bias = np.ones((self.out_h.shape[0],self.out_h.shape[1] +1))
-        out_h_bias[:,1:] = self.out_h
-        #print(out_h_bias.shape)
-        delta_W_o = np.dot(delta_o.T,out_h_bias)
-        #print("deltaW_o",delta_W_o)
+            if (error_MSE < eps):
+                break
+            # 2) Effettuo la feedfoward, calcolo MSE, calcolo delta_W usando backpropagation
+            self.feedforward(X)
+            error_MSE = compute_Error(T, self.Out_o)
+            self.errors_tr.append(error_MSE)
+            dW_o, dW_h = self.backpropagation(X, T)
 
-        delta_h = np.dot(delta_o,self._W_o[:,1:]) #f'(net_h) *******************
-        #print("delta_h",delta_h)
+            # 3) Upgrade weights
+            dW_o_new = self.eta * dW_o + self.alfa * self._dW_o_old
+            self.W_o = self.W_o + dW_o_new - (self.lambd * self.W_o)
 
-        delta_W_h = np.dot(delta_h.T,X)
-        #print("delta_W_h",delta_W_h)
-        return delta_W_o, delta_W_h
+            dW_h_new = self.eta * dW_h + self.alfa * self._dW_h_old
+            self.W_h = self.W_h + dW_h_new - (self.lambd * self.W_h)
 
-    def train(self,X,T,eta = 0.1,alfa = 0., lambd = 0.):
+            self.dW_o_old = dW_o_new
+            self.dW_h_old = dW_h_new
 
+            print("Epoch %s/%s) TR Error : %s"%(epoch+1,n_epochs,error_MSE))
+
+            # print("aggiornamento W_h", self.dW_h_old)
+            # print("W_h new", self.W_h)
+            # print("aggiornamento W_o", self.dW_o_old)
+            # print("W_o new", self.W_o)
+
+    def predict_class(self, X, treshold=0.5):
         self.feedforward(X)
-
-        #CALCOLA ERRORE!!!!
-
-        dW_o, dW_h = self.backpropagation(X,T)
-
-        dW_o_new = eta * dW_o + alfa * self._dW_o_old
-        self._W_o = self._W_o + dW_o_new - (lambd * self._W_o)
-
-        dW_h_new = eta * dW_h + alfa * self._dW_h_old
-        self._W_h = self._W_h + dW_h_new - (lambd * self._W_h)
-
-        self._dW_o_old = dW_o_new
-        self._dW_h_old = dW_h_new
-
-    def predict_class(self,X,treshold = 0.5):
-        self.feedforward(X)
-        predictions = np.zeros(self.out_o.shape)
-        predictions[self.out_o >= treshold] = 1
+        predictions = np.zeros(self.Out_o.shape)
+        predictions[self.Out_o >= treshold] = 1
         return predictions
 
     def predict_value(self):
         return
-
-X = np.array([
-    [1,2,-1],
-    [1,0,0]
-])
-
-T = np.array([
-    [1],
-    [0]
-])
-
-
-W_h = np.array([
-    [2,1,0],
-    [2,0,1]
-])
-W_o = np.array([
-    [-1,0,1]
-])
-
-
-mlp = MLP(W_h,W_o)
-mlp.train(X,T)
-print("W_h inizio",W_h)
-print("aggiornamento W_h", mlp._dW_h_old)
-print("W_h new",mlp._W_h)
-
-print("W_o inizio", W_o)
-print("aggiornamento W_o", mlp._dW_o_old)
-print("W_o new",mlp._W_o)
-print("out",mlp.out_o)
-print("Prediction",mlp.predict_class(X))

@@ -52,7 +52,7 @@ Per le matrici dei pesi:
 Gli elementi sono generati a partire da una distribuzione uniforme sull'intervallo specificato.
 
 --------------------------
-NOTA: LA MATRICE DEI PESI CONTIENE GIA' IL BIAS????   ;)
+NOTA: LA MATRICE DEI PESI CONTIENE GIA' IL BIAS!!!   ;)
 -------------------------
 
 :param n_rows : numero di righe
@@ -93,7 +93,7 @@ def compute_Error(T,OUT):
 
     assert T.shape == OUT.shape
     n_examples = T.shape[0]
-    return (np.linalg.norm(T - OUT, 'fro') ** 2) / n_examples
+    return 0.5* (np.linalg.norm(T - OUT, 'fro') ** 2) / n_examples
 
 """
 Calcola l'accuracy della rete neurale, dati target e predizioni della rete neurale.
