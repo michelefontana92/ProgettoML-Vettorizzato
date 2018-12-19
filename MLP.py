@@ -23,8 +23,8 @@ class MLP:
 
         # Vettorizzato: Matrici
         ## NOTA: Indico gli indici delle dimensioni delle matrici/vettori
-        self.W_h = init_Weights(n_hidden, n_feature, fan_in=False, range_start=-0.7,
-                                range_end=0.7)  # (n_neuroni_h x n_feature +1)
+        self.W_h = init_Weights(n_hidden, n_feature, fan_in=True, range_start=-0.4,
+                                range_end=0.4)  # (n_neuroni_h x n_feature +1)
         self.W_o = init_Weights(n_output, n_hidden, fan_in=False, range_start=-0.7,
                                 range_end=0.7)  # (n_neuroni_o x n_neuroni_h +1)
         self.Out_h = None  # (n_esempi x n_neuroni_h)
@@ -49,8 +49,8 @@ class MLP:
         self.accuracies_vl = []
 
         # Servono nella fase di train->backperopagation; delta vecchio dei pesi hidden e output
-        self._dW_o_old = np.zeros(self.W_o.shape)
-        self._dW_h_old = np.zeros(self.W_h.shape)
+        self.dW_o_old = np.zeros(self.W_o.shape)
+        self.dW_h_old = np.zeros(self.W_h.shape)
 
     # X già con bias
     def feedforward(self, X):
@@ -105,10 +105,10 @@ class MLP:
             dW_o, dW_h = self.backpropagation(X, T)
 
             # 3) Upgrade weights
-            dW_o_new = self.eta * dW_o + self.alfa * self._dW_o_old
+            dW_o_new = self.eta * dW_o + self.alfa * self.dW_o_old
             self.W_o = self.W_o + dW_o_new - (self.lambd * self.W_o)
 
-            dW_h_new = self.eta * dW_h + self.alfa * self._dW_h_old
+            dW_h_new = self.eta * dW_h + self.alfa * self.dW_h_old
             self.W_h = self.W_h + dW_h_new - (self.lambd * self.W_h)
 
             self.dW_o_old = dW_o_new
