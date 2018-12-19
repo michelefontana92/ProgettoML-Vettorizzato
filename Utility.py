@@ -117,6 +117,24 @@ def compute_Accuracy_Class(T,OUT):
     return n_correct_class / n_examples
 
 
+
+"""
+Data una generica matrice M, calcola la classe di ogni elemento.
+Opera solo su "classificazione binaria" (0/1).
+Se un elemento è maggiore o uguale a threshold, la classe assegnata è 1, 0 altrimenti.
+La matrice M non viene modificata.
+
+:param M : Matrice di cui si desidera calcolare la classe di ogni suo elemento
+:param threshold : Soglia di decisione. Default = 0.5
+:return M_prime: Matrice contenente la classificazione degli elementi di M
+
+"""
+def convert2binary_class(M,threshold = 0.5):
+
+    M_prime = np.zeros(M.shape)
+    M_prime[M >= threshold] = 1
+    return M_prime
+
 """
 Calcola l'accuracy misurata come MEE.
 DA IMPLEMENTARE... FORMULA CON MATRICI????

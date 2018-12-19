@@ -90,7 +90,7 @@ class MLP:
 
     # Train usando la Backprop: The Basic Alg. (vedi Slide Corso ML)
     ## NOTA: solo lista error_tr è stata sviluppata per vedere sul Monk2 LearningCurve e se ok!! IL RESTO TODO...
-    def train(self, X, T, n_epochs=1000, eps=10 ^ (-3)):
+    def train(self, X, T,X_val,T_val, n_epochs=1000, eps=10 ^ (-3), threshold = 0.5):
         assert X.shape[0] == T.shape[0]
         # 1) Init pesi e iperparametri // fatto nel costruttore
 
@@ -103,8 +103,19 @@ class MLP:
             # 2) Effettuo la feedfoward, calcolo MSE, calcolo delta_W usando backpropagation
             self.feedforward(X)
             error_MSE = compute_Error(T, self.Out_o)
+            accuracy = compute_Accuracy_Class(T, convert2binary_class(self.Out_o,threshold))
+
             self.errors_tr.append(error_MSE)
+            self.accuracies_tr.append(accuracy)
             dW_o, dW_h = self.backpropagation(X, T)
+
+
+            #CALCOLO IL VALIDATION ERROR
+            self.feedforward(X_val)
+            error_MSE_val = compute_Error(T_val,self.Out_o)
+            accuracy_val = compute_Accuracy_Class(T_val, convert2binary_class(self.Out_o, threshold))
+            self.errors_vl.append(error_MSE_val)
+            self.accuracies_vl.append(accuracy_val)
 
             # 3) Upgrade weights
             dW_o_new = self.eta * dW_o + self.alfa * self.dW_o_old
@@ -116,7 +127,8 @@ class MLP:
             self.dW_o_old = dW_o_new
             self.dW_h_old = dW_h_new
 
-            print("Epoch %s/%s) TR Error : %s"%(epoch+1,n_epochs,error_MSE))
+            print("Epoch %s/%s) TR Error : %s VL Error : %s TR Accuracy : %s VL Accuracy : %s"%(epoch+1,n_epochs,error_MSE,error_MSE_val,
+                                                                                                accuracy,accuracy_val))
 
             # print("aggiornamento W_h", self.dW_h_old)
             # print("W_h new", self.W_h)
