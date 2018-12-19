@@ -5,7 +5,7 @@ from matplotlib import pyplot as plt
 from Utility import *
 X, Y = load_monk("monks-2.train")
 
-mlp = MLP(17,3,1,TanhActivation(),SigmoidActivation(),eta=0.9,alfa=0.6,lambd=0)
+mlp = MLP(17,3,1,TanhActivation(),SigmoidActivation(),eta=0.9,alfa=0.6,lambd=0,fan_in_h=True,range_start_h=-0.4,range_end_h=0.4)
 mlp.train(addBias(X),Y,1500,1e-6)
 
 plt.plot(mlp.errors_tr)
