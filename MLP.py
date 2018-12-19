@@ -14,7 +14,9 @@ from Activation_Functions import *
 class MLP:
     # Costruttore classe con stati
     ## NOTA: Inseriti Pesi con bias
-    def __init__(self,n_feature, n_hidden, n_output, activation_h, activation_o, eta=0.1, lambd=0, alfa=0.75):
+    def __init__(self,n_feature, n_hidden, n_output, activation_h, activation_o, eta=0.1, lambd=0, alfa=0.75,
+                 fan_in=True, range_start=-0.7,range_end=0.7
+                 ):
         # Valori scalari
         #self.n_input = n_input  # righe di X
         self.n_feature = n_feature  # colonne di X, oppure neuroni input
@@ -23,10 +25,10 @@ class MLP:
 
         # Vettorizzato: Matrici
         ## NOTA: Indico gli indici delle dimensioni delle matrici/vettori
-        self.W_h = init_Weights(n_hidden, n_feature, fan_in=True, range_start=-0.4,
-                                range_end=0.4)  # (n_neuroni_h x n_feature +1)
-        self.W_o = init_Weights(n_output, n_hidden, fan_in=False, range_start=-0.7,
-                                range_end=0.7)  # (n_neuroni_o x n_neuroni_h +1)
+        self.W_h = init_Weights(n_hidden, n_feature, fan_in, range_start,
+                                range_end)  # (n_neuroni_h x n_feature +1)
+        self.W_o = init_Weights(n_output, n_hidden, fan_in, range_start,
+                                range_end)  # (n_neuroni_o x n_neuroni_h +1)
         self.Out_h = None  # (n_esempi x n_neuroni_h)
         self.Out_o = None  # (n_esempi x n_neuroni_o) //Per Monk quindi è un vettore
         self.Net_h = None  # (n_esempi x n_neuroni_h)
