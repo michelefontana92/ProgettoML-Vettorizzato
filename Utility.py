@@ -93,7 +93,7 @@ def compute_Error(T,OUT):
 
     assert T.shape == OUT.shape
     n_examples = T.shape[0]
-    return 0.5* (np.linalg.norm(T - OUT, 'fro') ** 2) / n_examples
+    return 0.5* (np.linalg.norm(T - OUT,'fro') ** 2) / n_examples
 
 """
 Calcola l'accuracy della rete neurale, dati target e predizioni della rete neurale.
