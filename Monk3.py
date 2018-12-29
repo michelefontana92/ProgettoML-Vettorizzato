@@ -8,6 +8,7 @@ import time
 X, Y = load_monk("monks-3.train")
 X_val, Y_val = load_monk("monks-3.test")
 
+
 mlp = MLP(17,4,1,TanhActivation(),SigmoidActivation(),eta=0.5,alfa=0.8,lambd=0.03,fan_in_h=True,range_start_h=-0.4,range_end_h=0.4)
 start = time.time()
 mlp.train(addBias(X),Y,addBias(X_val),Y_val,500,1e-6)

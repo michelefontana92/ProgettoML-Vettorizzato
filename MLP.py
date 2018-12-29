@@ -90,7 +90,7 @@ class MLP:
 
     # Train usando la Backprop: The Basic Alg. (vedi Slide Corso ML)
     ## NOTA: solo lista error_tr è stata sviluppata per vedere sul Monk2 LearningCurve e se ok!! IL RESTO TODO...
-    def train(self, X, T,X_val,T_val, n_epochs=1000, eps=10 ^ (-3), threshold = 0.5):
+    def train(self, X, T,X_val,T_val, n_epochs=1000, eps=10 ^ (-3), threshold = 0.5,suppress_print=False):
         assert X.shape[0] == T.shape[0]
         # 1) Init pesi e iperparametri // fatto nel costruttore
 
@@ -127,13 +127,18 @@ class MLP:
             self.dW_o_old = dW_o_new
             self.dW_h_old = dW_h_new
 
-            print("Epoch %s/%s) TR Error : %s VL Error : %s TR Accuracy : %s VL Accuracy : %s"%(epoch+1,n_epochs,error_MSE,error_MSE_val,
+            if not suppress_print:
+                print("Epoch %s/%s) TR Error : %s VL Error : %s TR Accuracy : %s VL Accuracy : %s"%(epoch+1,n_epochs,error_MSE,error_MSE_val,
                                                                                                 accuracy,accuracy_val))
 
             # print("aggiornamento W_h", self.dW_h_old)
             # print("W_h new", self.W_h)
             # print("aggiornamento W_o", self.dW_o_old)
             # print("W_o new", self.W_o)
+
+        if suppress_print:
+            print("Final Results: TR Error : %s VL Error : %s TR Accuracy : %s VL Accuracy : %s" % (self.errors_tr[-1], self.errors_vl[-1],
+            self.accuracies_tr[-1], self.accuracies_vl[-1]))
 
     def predict_class(self, X, treshold=0.5):
         self.feedforward(X)

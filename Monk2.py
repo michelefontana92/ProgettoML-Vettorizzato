@@ -9,9 +9,9 @@ import time
 X, Y = load_monk("monks-2.train")
 X_val, Y_val = load_monk("monks-2.test")
 
-mlp = MLP(17,3,1,TanhActivation(),SigmoidActivation(),eta=0.8,alfa=0.8,lambd=0,fan_in_h=True,range_start_h=-0.2,range_end_h=0.2)
+mlp = MLP(17,3,1,TanhActivation(),SigmoidActivation(),eta=0.9,alfa=0.9,lambd=0,fan_in_h=True,range_start_h=-0.2,range_end_h=0.2)
 start = time.time()
-mlp.train(addBias(X),Y,addBias(X_val),Y_val,500,1e-6)
+mlp.train(addBias(X),Y,addBias(X_val),Y_val,500,1e-4)
 end = time.time()
 
 print("VECTORIZED TIME ELAPSED = %3f sec per epoch"%((end-start)/500))
