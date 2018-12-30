@@ -70,3 +70,35 @@ def get_fold(X,T,folds,i):
     end_i = fold_i[1]
 
     return X[start_i:end_i,:], T[start_i:end_i,:]
+
+"""
+Dato l'indice del fold da usare come VL set, costruisce il TR set ed il VL set.
+
+:param X : Matrice input
+:param T : Matrice target
+:param folds : Rappresentazione dei folds come intervalli
+:param idx_vl : indice del fold da usare come VL set
+
+:return X_tr : Sottomatrice di X da usare come TR set
+:return T_tr : Sottomatrice di T da usare come TR set
+:return X_vl : Sottomatrice di X da usare come VL set
+:return T_vl : Sottomatrice di T da usare come VL set
+
+
+"""
+def split_dataset(X,T,folds,idx_vl):
+
+    assert idx_vl >= 0, "l'indice del fold per vl deve essere maggiore o uguale a zero"
+    assert idx_vl < len(folds), "indice del fold per vl deve essere minore del numero di folds"
+
+    "Validation set"
+    X_vl,T_vl = get_fold(X,T,folds,idx_vl)
+
+    "Ottengo il TR set come X_tr = X - X_vl e T_tr=T-T_vl"
+    fold_interval = folds[idx_vl]
+
+    rows_to_delete = range(fold_interval[0],fold_interval[1])
+    X_tr = np.delete(X,rows_to_delete,axis = 0)
+    T_tr = np.delete(T,rows_to_delete,axis = 0)
+
+    return X_tr, T_tr, X_vl,T_vl
