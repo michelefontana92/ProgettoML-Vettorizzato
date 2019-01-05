@@ -118,6 +118,12 @@ class MLP:
             self.accuracies_vl.append(accuracy_val)
 
             # 3) Upgrade weights
+
+            #LINE SEARCH
+
+            #A0
+            #A1
+            #A2
             dW_o_new = self.eta * dW_o + self.alfa * self.dW_o_old
             self.W_o = self.W_o + dW_o_new - (self.lambd * self.W_o)
 
@@ -136,6 +142,9 @@ class MLP:
             # print("aggiornamento W_o", self.dW_o_old)
             # print("W_o new", self.W_o)
 
+
+        #CALCOLO ERRROR E ACCURACY FINALI
+
         if suppress_print:
             print("Final Results: TR Error : %s VL Error : %s TR Accuracy : %s VL Accuracy : %s" % (self.errors_tr[-1], self.errors_vl[-1],
             self.accuracies_tr[-1], self.accuracies_vl[-1]))
@@ -146,5 +155,6 @@ class MLP:
         predictions[self.Out_o >= treshold] = 1
         return predictions
 
-    def predict_value(self):
-        return
+    def predict_value(self,X):
+        self.feedforward(X)
+        return self.Out_o

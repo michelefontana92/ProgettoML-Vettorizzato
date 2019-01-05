@@ -21,7 +21,7 @@ che delimitano il fold.
 
 def kFold(X,T,k):
 
-    assert k > 0,"k deve essere un intero positivo"
+    assert k > 1,"k deve essere maggiore di 1"
     assert X.shape[0] == T.shape[0], "Le due matrici devono avere lo stesso numero di righe"
 
     n_examples = X.shape[0]

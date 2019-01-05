@@ -34,9 +34,10 @@ NOTA: NON EFFETTUA IL RETRAINING FINALE SULL'INTERO (TR+VL) set
 :return best_mean_vl_error,best_std_vl_error : media e std del miglior validation error trovato
 
 """
-def kFoldCV(X,T,k,n_epochs,hidden_act,output_act, eta_values, alfa_values, hidden_values, weight_values, lambda_values,n_trials):
+def kFoldCV(n_features,X,T,k,n_epochs,hidden_act,output_act, eta_values, alfa_values,hidden_values, weight_values, lambda_values,n_trials,shuffle=True):
 
-    X,T = shuffle_matrices(X,T)
+    if shuffle:
+        X,T = shuffle_matrices(X,T)
 
     folds = kFold(X,T,k)
 
@@ -48,8 +49,6 @@ def kFoldCV(X,T,k,n_epochs,hidden_act,output_act, eta_values, alfa_values, hidde
     best_hidden = 0
     best_weight = 0
     best_lambda = 0
-
-
 
     """
     PER OGNI CONFIGURAZIONE...
@@ -78,8 +77,7 @@ def kFoldCV(X,T,k,n_epochs,hidden_act,output_act, eta_values, alfa_values, hidde
                             X_tr,T_tr,X_vl,T_vl = split_dataset(X,T,folds,idx)
 
                             mlp, mean_err_tr, std_err_tr, mean_acc_tr, std_acc_tr, mean_err_vl, std_err_vl, mean_acc_vl, std_acc_vl = run_trials(
-                                X_tr, T_tr, X_vl, T_vl, n_epochs, hidden_act, output_act, eta, alfa, hidden, weight,
-                                lambd, n_trials)
+                                n_features,X_tr, T_tr, X_vl, T_vl, n_epochs,hidden_act, output_act, eta, alfa, hidden, weight, lambd, n_trials)
 
                             vl_errors[idx] = mean_err_vl[-1]
                             print("FOLD %s: VL ERROR = %3f"%(idx+1,mean_err_vl[-1]))

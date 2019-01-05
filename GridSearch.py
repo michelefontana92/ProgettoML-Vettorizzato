@@ -3,7 +3,7 @@ from Utility import *
 import numpy as np
 
 
-def run_trials(X_tr,T_tr,X_vl,T_vl,n_epochs, hidden_act,output_act,eta,alfa,n_hidden,weight,lambd,n_trials):
+def run_trials(n_features,X_tr,T_tr,X_vl,T_vl,n_epochs,hidden_act,output_act,eta,alfa,n_hidden,weight,lambd,n_trials):
 
     best_vl_error = 1e10
     best_mlp = None
@@ -18,7 +18,7 @@ def run_trials(X_tr,T_tr,X_vl,T_vl,n_epochs, hidden_act,output_act,eta,alfa,n_hi
 
         print(100*'-')
         print("Trial %s/%s: "%(trial +1, n_trials))
-        mlp = MLP(17, n_hidden, 1, hidden_act, output_act, eta=eta, alfa=alfa, lambd=lambd,
+        mlp = MLP(n_features, n_hidden, 1, hidden_act, output_act, eta=eta, alfa=alfa, lambd=lambd,
                   fan_in_h=True,
                   range_start_h=-weight, range_end_h=weight)
 
@@ -62,7 +62,7 @@ def run_trials(X_tr,T_tr,X_vl,T_vl,n_epochs, hidden_act,output_act,eta,alfa,n_hi
     return best_mlp,mean_err_tr,std_err_tr,mean_acc_tr,std_acc_tr,mean_err_vl,std_err_vl,mean_acc_vl,std_acc_vl
 
 
-def gridSearch(X_tr,T_tr,X_vl,T_vl,n_epochs,hidden_act,output_act, eta_values, alfa_values, hidden_values, weight_values, lambda_values,n_trials):
+def gridSearch(n_features,X_tr,T_tr,X_vl,T_vl,n_epochs,hidden_act,output_act, eta_values, alfa_values, hidden_values, weight_values, lambda_values,n_trials):
     best_vl_error = 1e10
     best_mlp = None
     best_eta = 0
@@ -88,7 +88,10 @@ def gridSearch(X_tr,T_tr,X_vl,T_vl,n_epochs,hidden_act,output_act, eta_values, a
                         print("Provo eta=%s alfa=%s #hidden=%s weight=%s lambda = %s" % (
                         eta, alfa, hidden, weight, lambd))
 
-                        mlp,mean_err_tr,std_err_tr,mean_acc_tr,std_acc_tr,mean_err_vl,std_err_vl,mean_acc_vl,std_acc_vl = run_trials(X_tr,T_tr,X_vl,T_vl,n_epochs,hidden_act,output_act,eta,alfa,hidden,weight,lambd,n_trials)
+                        mlp,mean_err_tr,std_err_tr,mean_acc_tr,std_acc_tr,mean_err_vl,std_err_vl,mean_acc_vl,std_acc_vl = run_trials(n_features,X_tr,T_tr,
+                                                                                                            X_vl,T_vl,n_epochs,hidden_act,
+                                                                                                        output_act,eta,alfa,hidden,
+                                                                                                weight,lambd,n_trials)
 
                         if best_mlp is None:
                             best_mlp = mlp
