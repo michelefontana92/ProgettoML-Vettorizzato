@@ -114,3 +114,13 @@ print("X3_internal_tr size:", X3_internal_tr.shape)
 # print("X3_internal_vl:", X3_internal_vl)
 print("X3_internal_vl:", X3_internal_vl.shape)
 print
+
+
+"""
+prove varie...
+"""
+
+# Divido internal set: TR e VL set
+X_tr = train_test_split(X3, shuffle=True)
+print("X_tr:", X_tr)
+print

@@ -18,7 +18,9 @@ def shuffle_matrices(X, T):
 Effettua la KFOLD CV.
 Restituisce la configurazione migliore degli iperparametri.
     
-NOTA: NON EFFETTUA IL RETRAINING FINALE SULL'INTERO (TR+VL) set
+NOTA1: NON EFFETTUA IL RETRAINING FINALE SULL'INTERO (TR+VL) set
+NOTA2: NON EFFETTUA LO SPLITTING DATI INTERNO (TR/VL) E TEST(INTERNO)
+ENTRAMBI FATTI SUI FILE "FINALI" (vedi file test_kfoldCV.py e test_HoldOut.py)
 
 :param X: Matrice di input
 :param T: Matrice di target
@@ -37,6 +39,18 @@ NOTA: NON EFFETTUA IL RETRAINING FINALE SULL'INTERO (TR+VL) set
 :return best_mean_vl_error,best_std_vl_error : media e std del miglior validation error trovato
     - Classificazione => uso MSE
     - Regressione => uso MEE
+
+REMEMBER=> Hyperparameter (esaustiva):
+    # eta
+    # alfa
+    # hidden (in generale numero neuroni)
+    # weight (Initialize weights by random values near zero)
+    # lambda
+    # on-line/batch/miniBatch !
+    # stopping criteria (piu per CM...)
+    # n_trials per multipla minima (forzatura)
+    # n_epochs non fisso (forzatura)
+    # k della kcrossvalidation (forzatura)
 
 """
 

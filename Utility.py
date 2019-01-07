@@ -4,9 +4,30 @@ Questo file contiene varie funzioni utilizzate dagli altri moduli del progetto.
 """
 # TODO: RICONTROLLARE PER BENE QUESTE FUNZIONI E CERCARE FORMULA PER MEE!!!!!!!!!!!!!!!!!!
 
-from sklearn.metrics.pairwise import euclidean_distances
 import numpy as np
-import math
+from sklearn.model_selection import train_test_split
+
+"""
+Spitto internal set: TR e VL set, ma su  M = [X, T]
+Effettua lo shuffling delle due matrici X e T (ma su M!)
+separo M
+
+:parameter:
+X: dataset TR+VL (NO TEST INTERNO!)
+T: target TR+VL
+
+:return: X_tr, T_tr, X_vl, T_vl
+"""
+
+
+def split_data_train_validation(X, T, test_size=0.25):
+    M = np.concatenate((X, T), axis=1)
+    M_tr, M_vl = train_test_split(M, test_size=test_size)  # shuffle=True , train_size=0.75
+    X_shuffled_tr = M_tr[:, :X.shape[1]]
+    T_shuffled_tr = M_tr[:, -T.shape[1]:]
+    X_shuffled_vl = M_vl[:, :X.shape[1]]
+    T_shuffled_vl = M_vl[:, -T.shape[1]:]
+    return X_shuffled_tr, T_shuffled_tr, X_shuffled_vl, T_shuffled_vl
 
 """"
 Aggiunge il bias ad una generica matrice M.
@@ -154,37 +175,37 @@ def compute_Regr_MEE(T, OUT):
     n_examples = T.shape[0]
 
     D = OUT - T
-    Q = D**2
+    Q = D ** 2
     S = np.sum(Q, 1)
     R = np.sqrt(S)
     scal = np.sum(R, 0)
-    mee = scal/n_examples
+    mee = scal / n_examples
 
     return mee
+
 
 """
 Salva la matrice M nel file specificato.
 M viene salvata nel file usando la seguente formattazione:
-
 numero righe di M
 numero colonne di M
 ogni riga nel file rappresenta una riga di M (gli elementi sono separati da una virgola)
-
 :param filename : path del file su cui salvare la matrice
 :param M : matrice da salvare
 """
-def saveMatrix2File(filename,M):
 
-    with open(filename,"w") as f:
-        f.write(str(M.shape[0])+"\n") #scrivo numero di righe
-        f.write(str(M.shape[1])+"\n") #scrivo numero di colonne
 
-        for (row_idx,row) in enumerate(M):
-            for (el_idx,element) in enumerate(row):
+def saveMatrix2File(filename, M):
+    with open(filename, "w") as f:
+        f.write(str(M.shape[0]) + "\n")  # scrivo numero di righe
+        f.write(str(M.shape[1]) + "\n")  # scrivo numero di colonne
 
-                #scrivo ogni elemento della riga row di M su questa riga, separando ogni elemento usando la virgola
+        for (row_idx, row) in enumerate(M):
+            for (el_idx, element) in enumerate(row):
+
+                # scrivo ogni elemento della riga row di M su questa riga, separando ogni elemento usando la virgola
                 f.write(str(element))
-                if not el_idx == M.shape[1] - 1 :
+                if not el_idx == M.shape[1] - 1:
                     f.write(",")
                 else:
                     f.write("\n")
@@ -194,12 +215,13 @@ def saveMatrix2File(filename,M):
 
 """
 Carico la matrice dal file specificato
-
 :param filename : path del file da cui caricare la matrice
 :return M : Matrice letta dal file
+(DI PROVA: NON ANCORA COME VUOLE IL PROFESSORE!)
 """
-def loadMatrixFromFile(filename):
 
+
+def loadMatrixFromFile(filename):
     with open(filename) as f:
 
         n_rows = 0
@@ -207,7 +229,7 @@ def loadMatrixFromFile(filename):
         M = None
         current_row = 0
 
-        for (idx,line) in enumerate(f):
+        for (idx, line) in enumerate(f):
 
             if idx == 0:
                 n_rows = int(line.rstrip("\n"))
@@ -221,13 +243,12 @@ def loadMatrixFromFile(filename):
                 elements = line.rstrip("\n").split(",")
                 current_col = 0
                 for element in elements:
-                    M[current_row,current_col] = float(element)
+                    M[current_row, current_col] = float(element)
                     current_col += 1
 
                 current_row += 1
 
         return M
-
 
 
 """
@@ -285,13 +306,13 @@ if __name__ == "__main__":
         [2, 1]
     ])
 
-    dist = np.linalg.norm(T-Y)
-    print(dist)
+    dist = np.linalg.norm(T - Y)
+    print dist
 
     a = np.array([1, 3])
     b = np.array([2, 5])
     dist2 = np.linalg.norm(a - b)
-    print(dist2)
+    print dist2
 
     O = np.array([
         [1, 2],
@@ -306,20 +327,68 @@ if __name__ == "__main__":
     ])
 
 
-    """
+"""
     Test per load/saveMatrix
-    """
-    M = np.array([
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9],
-        [10, 11, 12],
-        [13, 14, 15]
-    ])
+"""
+M = np.array([
+    [1, 2, 3, 16],
+    [4, 5, 6, 17],
+    [7, 8, 9, 18],
+    [10, 11, 12, 19],
+    [13, 14, 15, 20]
+])
 
-    saveMatrix2File("prova.csv", M)
-    M = loadMatrixFromFile("prova.csv")
-    print(M)
+saveMatrix2File("prova.csv", M)
+P = loadMatrixFromFile("prova.csv")
+P_dataset = P[:, 0:P.shape[1]-1]
+P_t = P[:, -1]
+print(P_dataset)
+print(P_t)
 
+"""
+Prove
+"""
+"""
+X = np.array([
+    [2, 3, 4],
+    [5, 6, 7],
+    [8, 9, 10],
+    [11, 12, 13],
+    [14, 15, 16],
+    [17, 18, 19],
+    [20, 21, 22],
+    [23, 24, 25],
+    [26, 27, 28],
+    [29, 30, 31]
+])
 
+T = np.array([[1],[2],[3],[4],[5],[6],[7],[8],[9],[10]])
+"""
+""""
+print "X:", X.shape
+print "T:", T.shape
+
+M = np.concatenate((X, T), axis=1)
+print "M:", M
+
+M_tr, M_vl = train_test_split(M, test_size=0.25)  # shuffle=True , train_size=0.75
+print "M_tr:", M_tr
+print "M_vl:", M_vl
+
+X_shuffled_tr = M_tr[:, :X.shape[1]]
+T_shuffled_tr = M_tr[:, -T.shape[1]:]
+X_shuffled_vl = M_vl[:, :X.shape[1]]
+T_shuffled_vl = M_vl[:, -T.shape[1]:]
+print "X_shuffled_tr", X_shuffled_tr
+print "T_shuffled_tr", T_shuffled_tr
+print "X_shuffled_vl", X_shuffled_vl
+print "T_shuffled_vl", T_shuffled_vl
+"""
+"""
+X_tr, T_tr, X_vl, T_vl = split_data_train_validation(X, T, 1)
+print "X_tr", X_tr
+print "T_tr", T_tr
+print "X_vl", X_vl
+print "T_vl", T_vl
+"""
 
