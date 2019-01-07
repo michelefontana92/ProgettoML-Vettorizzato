@@ -112,6 +112,9 @@ class MLP:
             #   calcolo MSE class/regress (Learning Curve TR/VL), accuracy(accuracy curve TR/VL, class)/ MEE (regress);
             #   calcolo delta_W usando backpropagation
             self.feedforward(X)
+            # print "n_output:", self.n_output
+            # print "OUT_o", self.Out_o.shape
+            # print "Target", T.shape
             error_MSE = compute_Error(T, self.Out_o)
             if self.classification:
                 accuracy = compute_Accuracy_Class(T, convert2binary_class(self.Out_o, threshold))

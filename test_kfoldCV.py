@@ -2,18 +2,18 @@ from KFoldCV import *
 from Monk import *
 from matplotlib import pyplot as plt
 
-eta_values = [0.6,0.65,0.7,0.8]
-alfa_values = [0.7,0.8]
-hidden_values =[2,3,4]
-weight_values = [0.5, 0.7]
+eta_values = [0.4, 0.6,0.65,0.9]
+alfa_values = [0.7,0.75, 0.8]
+hidden_values =[1,3,4,5]
+weight_values = [0.3, 0.7]
 lambda_values = [0,0.01,0.1]
-n_epochs = 500
+n_epochs = 450
 n_trials = 4
-k = 2
+k=3
 n_features = 17
-classifications = False
+classifications = True
 
-X,T = load_monk("monks-2.train")
+X,T = load_monk("monks-3.train")
 
 "KFOLD CV"  # Classificazione
 best_eta,best_alfa,best_hidden,best_lambda,best_weight,best_mean_vl_error,best_std_vl_error=kFoldCV(n_features,X,T,k,500,
@@ -22,8 +22,8 @@ best_eta,best_alfa,best_hidden,best_lambda,best_weight,best_mean_vl_error,best_s
 
 
 "RETRAINING"  # Classificazione
-X_tr,T_tr = load_monk("monks-2.train")
-X_vl,T_vl = load_monk("monks-2.test")
+X_tr,T_tr = load_monk("monks-3.train")
+X_vl,T_vl = load_monk("monks-3.test")
 
 mlp, mean_err_tr, std_err_tr, mean_acc_tr, std_acc_tr, mean_err_vl, std_err_vl, mean_acc_vl, std_acc_vl = run_trials(n_features,
                                 X_tr, T_tr, X_vl, T_vl, n_epochs,TanhActivation(),SigmoidActivation(), best_eta, best_alfa, best_hidden, best_weight,
@@ -35,7 +35,7 @@ if classifications:
                                                                    mlp.errors_vl[-1], mlp.accuracies_vl[-1]))
 
     # Print & plot su Classificazione
-    st = plt.suptitle("Monk 1(Best model)\neta=%s alpha=%s lambda=%s n_hidden=%s"%(mlp.eta,mlp.alfa,mlp.lambd,mlp.n_hidden))
+    st = plt.suptitle("Monk 3(Best model)\neta=%s alpha=%s lambda=%s n_hidden=%s"%(mlp.eta,mlp.alfa,mlp.lambd,mlp.n_hidden))
     plt.subplot(2, 1, 1)
     plt.plot(mlp.errors_tr,label='Training Error',ls="-")
     plt.plot(mlp.errors_vl,label='Validation Error',ls="dashed")
@@ -58,7 +58,7 @@ else:
                                                                    mlp.errors_vl[-1], mlp.errors_mee_vl[-1]))
 
     # Print & plot su Regressione PROVA
-    st = plt.suptitle("Monk 1(Best model)\neta=%s alpha=%s lambda=%s n_hidden=%s"%(mlp.eta,mlp.alfa,mlp.lambd,mlp.n_hidden))
+    st = plt.suptitle("Best model\neta=%s alpha=%s lambda=%s n_hidden=%s"%(mlp.eta,mlp.alfa,mlp.lambd,mlp.n_hidden))
     plt.subplot(2, 1, 1)
     plt.plot(mlp.errors_tr,label='Training Error',ls="-")
     plt.plot(mlp.errors_vl,label='Validation Error',ls="dashed")

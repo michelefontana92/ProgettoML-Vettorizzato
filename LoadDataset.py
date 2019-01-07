@@ -33,12 +33,12 @@ def load_cup_dataset(filename,n_rows_to_ignore = 10):
                 patterns_loaded.append(example)
 
 
-    #Faccio diventare patterns_loaded una matrice (n_esempi, -1)
+    # Faccio diventare patterns_loaded una matrice (n_esempi, -1)
 
     patterns_loaded = np.reshape(np.array(patterns_loaded), (n_examples,-1))
 
-    #Converto patterns_loaded da matrice di stringhe a matrice di float.
-    #Metto il risultato in M
+    # Converto patterns_loaded da matrice di stringhe a matrice di float.
+    # Metto il risultato in M
     M = np.zeros(patterns_loaded.shape)
 
     for (row_idx,row) in enumerate(patterns_loaded):
@@ -46,7 +46,7 @@ def load_cup_dataset(filename,n_rows_to_ignore = 10):
 
            M[row_idx,col_idx] = float(pattern)
 
-    #Splitto M in X e T
+    # Splitto M in X e T
 
     X = M[:,:-2]
     T = M[:,-2:]

@@ -31,7 +31,7 @@ def run_trials(n_features, X_tr, T_tr, X_vl, T_vl, n_epochs, hidden_act, output_
 
         print(100 * '-')
         print("Trial %s/%s: " % (trial + 1, n_trials))
-        mlp = MLP(n_features, n_hidden, 1, hidden_act, output_act, eta=eta, alfa=alfa, lambd=lambd,
+        mlp = MLP(n_features, n_hidden, T_tr.shape[1], hidden_act, output_act, eta=eta, alfa=alfa, lambd=lambd,
                   fan_in_h=True, range_start_h=-weight, range_end_h=weight, classification=classification)
 
         mlp.train(addBias(X_tr), T_tr, addBias(X_vl), T_vl, n_epochs, 1e-30, suppress_print=True)
