@@ -63,7 +63,7 @@ class LinearActivation(ActivationFunction):
         return X
 
     def compute_function_gradient(self, X):
-        return np.eye(X.shape[0], X.shape[1])
+        return np.ones((X.shape[0], X.shape[1]))
 
 
 "----------------------------------------------------------------------------------------------------------------------"

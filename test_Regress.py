@@ -2,23 +2,28 @@ from HoldOut import *
 from KFoldCV import *
 from matplotlib import pyplot as plt
 
-eta_values = [0.8]
-alfa_values = [0.85]
-hidden_values = [5]
+
+
+eta_values = [0.02]
+alfa_values = [0.8]
+hidden_values = [12]
 weight_values = [0.7]
-lambda_values = [0, 0.025]
+lambda_values = [0.001]
 n_epochs = 1000
-n_trials = 5
+n_trials = 3
 n_features = 10
-k = 4
+k = 2
 classifications = False
 
 hold_out = False
 
+
+
+
 "fase di splitting Tr-Vl/TS  oppure load matrici nei file"
 P = loadMatrixFromFile("DatasetTrVl.csv")
-X = P[:, 0:P.shape[1] - 2]
-T = P[:, P.shape[1] - 2:P.shape[1]]
+X = P[:, : - 2]
+T = P[:, -2:]
 print(X.shape)
 print(T.shape)
 # print(X[1, :])
@@ -29,7 +34,7 @@ if hold_out:
     best_eta, best_alfa, best_hidden, best_lambda, best_weight, best_mean_vl_error = do_HoldOut(n_features, X, T,
                                                                                                 n_epochs,
                                                                                                 TanhActivation(),
-                                                                                                SigmoidActivation(),
+                                                                                                LinearActivation(),
                                                                                                 eta_values, alfa_values,
                                                                                                 hidden_values,
                                                                                                 weight_values,
@@ -43,7 +48,7 @@ if hold_out:
 
     # ReTrain su tutto X,T!
     mlp, mean_err_tr, std_err_tr, mean_acc_tr, std_acc_tr, mean_err_vl, std_err_vl, mean_acc_vl, std_acc_vl = run_trials(
-        n_features, X, T, X_vl, T_vl, n_epochs, TanhActivation(), SigmoidActivation(),
+        n_features, X, T, X_vl, T_vl, n_epochs, TanhActivation(),  LinearActivation(),
         best_eta, best_alfa, best_hidden, best_weight, best_lambda, n_trials, classifications)
 
     # Print & plot su Regressione
@@ -74,7 +79,7 @@ else:
     "KFOLD CV: TECNICA DI VALIDAZIONE"
     best_eta, best_alfa, best_hidden, best_lambda, best_weight, best_mean_vl_error, best_std_vl_error = kFoldCV(
         n_features, X, T, k, 500,
-        TanhActivation(), SigmoidActivation(),
+        TanhActivation(), LinearActivation(),
         eta_values, alfa_values, hidden_values, weight_values, lambda_values, n_trials, classifications)
 
     "RETRAINING TR+VL data"
@@ -84,7 +89,7 @@ else:
 
     # ReTrain su tutto X,T!
     mlp, mean_err_tr, std_err_tr, mean_acc_tr, std_acc_tr, mean_err_vl, std_err_vl, mean_acc_vl, std_acc_vl = run_trials(
-        n_features, X, T, X_vl, T_vl, n_epochs, TanhActivation(), SigmoidActivation(),
+        n_features, X, T, X_vl, T_vl, n_epochs, TanhActivation(),  LinearActivation(),
         best_eta, best_alfa, best_hidden, best_weight, best_lambda, n_trials, classifications)
 
     # Print & plot su Regressione

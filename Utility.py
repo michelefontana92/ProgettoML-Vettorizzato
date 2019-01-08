@@ -307,12 +307,12 @@ if __name__ == "__main__":
     ])
 
     dist = np.linalg.norm(T - Y)
-    print dist
+    print(dist)
 
     a = np.array([1, 3])
     b = np.array([2, 5])
     dist2 = np.linalg.norm(a - b)
-    print dist2
+    print(dist2)
 
     O = np.array([
         [1, 2],
