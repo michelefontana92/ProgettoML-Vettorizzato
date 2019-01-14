@@ -327,23 +327,23 @@ if __name__ == "__main__":
     ])
 
 
-"""
+    """
     Test per load/saveMatrix
-"""
-M = np.array([
-    [1, 2, 3, 16],
-    [4, 5, 6, 17],
-    [7, 8, 9, 18],
-    [10, 11, 12, 19],
-    [13, 14, 15, 20]
-])
+    """
+    M = np.array([
+        [1, 2, 3, 16],
+        [4, 5, 6, 17],
+        [7, 8, 9, 18],
+        [10, 11, 12, 19],
+        [13, 14, 15, 20]
+    ])
 
-saveMatrix2File("prova.csv", M)
-P = loadMatrixFromFile("prova.csv")
-P_dataset = P[:, 0:P.shape[1]-1]
-P_t = P[:, -1]
-print(P_dataset)
-print(P_t)
+    saveMatrix2File("prova.csv", M)
+    P = loadMatrixFromFile("prova.csv")
+    P_dataset = P[:, 0:P.shape[1]-1]
+    P_t = P[:, -1]
+    print(P_dataset)
+    print(P_t)
 
 """
 Prove

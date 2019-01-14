@@ -4,15 +4,15 @@ from matplotlib import pyplot as plt
 
 
 
-eta_values = [0.02]
-alfa_values = [0.8]
-hidden_values = [12]
+eta_values = [0.02,0.01,0.05]
+alfa_values = [0.8,0.6,0.7,0.5]
+hidden_values = [12,20,30]
 weight_values = [0.7]
-lambda_values = [0.001]
+lambda_values = [0.01,0.1,0.001]
 n_epochs = 1000
 n_trials = 3
 n_features = 10
-k = 2
+k = 5
 classifications = False
 
 hold_out = False
