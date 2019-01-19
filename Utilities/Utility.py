@@ -6,6 +6,7 @@ Questo file contiene varie funzioni utilizzate dagli altri moduli del progetto.
 
 import numpy as np
 from sklearn.model_selection import train_test_split
+from MLP import *
 
 """
 Spitto internal set: TR e VL set, ma su  M = [X, T]
@@ -249,6 +250,8 @@ def loadMatrixFromFile(filename):
                 current_row += 1
 
         return M
+
+
 
 
 """

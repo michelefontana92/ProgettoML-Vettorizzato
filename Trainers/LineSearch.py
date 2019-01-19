@@ -1,58 +1,32 @@
-import numpy as np
 from MLP import *
-from Utility import *
+from Utilities.Utility import *
 import math
 
-"""
-Mette due matrici M, N di dimensione rispettivamente pari a m,n, in un unico vettore di dimensione (m+n,1)
-"""
-def vectorize(M,N):
 
-    m = M.shape[0] * M.shape[1]
-    n = N.shape[0] * N.shape[1]
-
-    v = np.zeros((m + n,1))
-
-    offset = 0
-    for (idx_row,row) in enumerate(M):
-        for (idx_col,element) in enumerate(row):
-
-            v[offset] = element
-            offset += 1
-
-    for (idx_row, row) in enumerate(N):
-        for (idx_col, element) in enumerate(row):
-            v[offset] = element
-            offset += 1
-
-    return v
-
-
-def f2phi(alpha,mlp,X,T,grad_W_h,grad_W_o):
+def f2phi(alpha,mlp,X,T,grad_W_h,grad_W_o,lambd):
 
     #PESI ATTUALI
     W_h_current = mlp.W_h
     W_o_current = mlp.W_o
 
+    grad_W=vectorize(grad_W_h,grad_W_o)
+
     #print("W_h",W_h_current)
     #print("W_o",W_o_current)
 
-    #METTO IL GRADIENTE ATTUALE IN UN UNICO VETTORE
-    grad_W = vectorize(-grad_W_h, -grad_W_o)
-
     #SPOSTO I PESI LUNGO DELTA_W ( = - GRADIENTE)
-    mlp.W_h = mlp.W_h + (alpha * grad_W_h)
-    mlp.W_o = mlp.W_o + (alpha * grad_W_o)
+    mlp.W_h = mlp.W_h - (alpha * grad_W_h)
+    mlp.W_o = mlp.W_o - (alpha * grad_W_o)
 
     #CALCOLO E(w + alpha* delta_W)
-    mlp.feedforward(addBias(X))
-    phi_alfa = compute_Error(T, mlp.Out_o)
+
+    phi_alpha = compute_obj_function(mlp,X,T,lambd)
 
     # GRADIENTE CALCOLATO NEL NUOVO PUNTO
-    grad_W_o_new, grad_W_h_new = mlp.backpropagation(addBias(X), T)
+    grad_W_o_new, grad_W_h_new = compute_gradient(mlp,X,T,lambd)
 
     #METTO IL NUOVO GRADIENTE SOTTO FORMA DI UN UNICO VETTORE
-    grad_W_new = vectorize(-grad_W_h_new, -grad_W_o_new)
+    grad_W_new = vectorize(grad_W_h_new, grad_W_o_new)
 
     #CALCOLO LA DERIVATA DI PHI
     phi_prime = float(np.dot(grad_W_new.T, -grad_W))
@@ -61,7 +35,7 @@ def f2phi(alpha,mlp,X,T,grad_W_h,grad_W_o):
     mlp.W_h = W_h_current
     mlp.W_o = W_o_current
 
-    return phi_alfa,phi_prime
+    return phi_alpha,phi_prime
 
 """
 Controlla se la condizione di armijio è soddisfatta
@@ -81,22 +55,22 @@ def check_strong_wolfe(phi_prime_alpha,phi_prime_zero,m2):
     assert m2 < 1
     assert m2 > 0
 
-    return math.fabs(phi_prime_alpha) <= -m2 * phi_prime_zero
+    return abs(phi_prime_alpha) <= -m2 * phi_prime_zero
 
 
 """
 AWLS
  NOTA: ordine dW_h, dW_o come matrici sul foglio...
 """
-def AWLS(mlp, X, T, error_MSE, dW_h, dW_o, alpha_0=0.01, max_it=100, m1=0.001, m2=0.75, tau=0.9, eps=1e-6,mina=1e-12):
-    phi_0 = error_MSE
-    gradE = vectorize( -dW_h, -dW_o)
+def AWLS(mlp, X, T, loss, grad_W_h, grad_W_o, lambd, alpha_0=0.01, max_it=100, m1=0.001, m2=0.8, tau=0.925, epsilon=1e-6,mina=1e-12):
+    phi_0 = loss
+    gradE = vectorize(grad_W_h, grad_W_o)
     phi_p_0 = - np.linalg.norm(gradE)**2
     alpha = alpha_0
     do_quadratic_int = False
 
     for it in range(max_it):
-        phi_alpha, phi_p_alpha = f2phi(alpha, mlp, X, T, dW_h, dW_o) #TODO... modifica func f2phi...
+        phi_alpha, phi_p_alpha = f2phi(alpha, mlp, X, T, grad_W_h, grad_W_o,lambd) #TODO... modifica func f2phi...
         arm = check_armijio(phi_0, phi_p_0, phi_alpha, m1, alpha)
         s_wolf = check_strong_wolfe(phi_p_alpha, phi_p_0, m2)
 
@@ -104,7 +78,7 @@ def AWLS(mlp, X, T, error_MSE, dW_h, dW_o, alpha_0=0.01, max_it=100, m1=0.001, m
             print("Soddisfatta AW")
             break
 
-        if phi_p_alpha >= 0:
+        if phi_p_alpha >= 1e-12:
             #   chiama Quadratic interpolation!
             print("phi_p_alpha >= 0")
             do_quadratic_int = True
@@ -114,43 +88,50 @@ def AWLS(mlp, X, T, error_MSE, dW_h, dW_o, alpha_0=0.01, max_it=100, m1=0.001, m
         alpha = alpha / tau
 
     if do_quadratic_int:
-        alpha = quadratic_interpolation(alpha, mlp, X, T, dW_h, dW_o, gradE, phi_0, phi_p_0, m1, m2, max_it,
-                                    eps, mina)
+        print("Iterazione %s: Alpha = %s" % (it, alpha))
+        alpha = quadratic_interpolation(alpha, mlp, X, T, grad_W_h, grad_W_o, gradE, lambd,phi_0, phi_p_0, m1, m2, max_it,
+                                    epsilon, mina)
+
+    if not do_quadratic_int:
+        print("Fine numero massimo iterazioni")
 
     return alpha
 
 
-def quadratic_interpolation(alpha_0, mlp, X, T, dW_h, dW_o,gradE,phi_0,phi_p_0,m1=0.001,m2=0.9,max_it=100,epsilon = 1e-6,mina=1e-12):
+def quadratic_interpolation(alpha_0, mlp, X, T, grad_W_h, grad_W_o,gradE,lambd,phi_0,phi_p_0,
+                            m1=0.001,m2=0.9,max_it=100,epsilon = 1e-6,mina=1e-12, sfgrd =0.01):
 
     alpha_sx = 0
     alpha_dx = alpha_0
     phi_p_sx = phi_p_0
-    phi_dx,phi_p_dx = f2phi(alpha_dx, mlp, X, T, dW_h, dW_o)
-    norm_gradE = np.linalg.norm(gradE)
-    epsilon_prime = epsilon * norm_gradE
+    phi_dx,phi_p_dx = f2phi(alpha_dx, mlp, X, T, grad_W_h, grad_W_o,lambd)
+    # norm_gradE = np.linalg.norm(gradE)
+    epsilon_prime = 1e-12
     alpha = alpha_0
 
-    print("Faccio interpolazione in [0,%s]"%(alpha_0))
+    print("[QUAD INT]Faccio interpolazione in [0,%s]"%(alpha_0))
     for it in range(max_it):
 
         if math.fabs(phi_p_dx) <= epsilon_prime:
-            print("Derivata dx circa 0")
+            print("[QUAD INT]Trovato ottimo: derivata dx = ",math.fabs(phi_p_dx))
             break
 
         if alpha_dx - alpha_sx <= mina:
-            print("Alpha sx e dx troppo vicini vicini")
+            print("[QUAD INT]Alpha sx e dx troppo vicini")
             break
 
         alpha = ((alpha_sx * phi_p_dx) - (alpha_dx* phi_p_sx)) / (phi_p_dx  - phi_p_sx)
-        print("Iterazione %s) Alpha Interpolazione = %s"%(it,alpha))
+        # a = max( [ am * ( 1 + sfgrd ) min( [ as * ( 1 - sfgrd ) a ] ) ] );
+        alpha = max([alpha_sx*(1+sfgrd), min([alpha_dx*(1-sfgrd), alpha])])
+        print("[QUAD INT]Iterazione %s) Alpha Interpolato = %s"%(it,alpha))
 
-        phi_alpha, phi_p_alpha = f2phi(alpha, mlp, X, T, dW_h, dW_o)
+        phi_alpha, phi_p_alpha = f2phi(alpha, mlp, X, T, grad_W_h, grad_W_o,lambd)
 
         arm = check_armijio(phi_0, phi_p_0, phi_alpha, m1, alpha)
         s_wolf = check_strong_wolfe(phi_p_alpha, phi_p_0, m2)
 
         if arm and s_wolf:  # love by RS e sopprattutto Michele =) (NON LO STIA A SENTI' PROFFE !!!!!)
-            print("Soddisfatto AW")
+            print("[QUAD INT] Soddisfatto AW")
             break
 
         if phi_p_alpha < 0:
@@ -162,7 +143,7 @@ def quadratic_interpolation(alpha_0, mlp, X, T, dW_h, dW_o,gradE,phi_0,phi_p_0,m
             alpha_dx = alpha
             phi_p_dx = phi_p_alpha
             if alpha_dx <= mina:
-                print("Alpha dx troppo piccolo")
+                print("[QUAD INT]Alpha dx troppo piccolo")
                 break
 
     return alpha
@@ -185,13 +166,9 @@ if __name__ == '__main__':
         [13,14]
     ])
 
-    print(vectorize(M,N))
-    print(vectorize(M,N).shape)
+    #print(vectorize(M,N))
+    #print(vectorize(M,N).shape)
 
-    n_features = 3
-    n_hidden = 2
-    n_out = 2
-    alpha = 0.2
 
     X = np.array([
         [1, -2,3],
@@ -203,8 +180,18 @@ if __name__ == '__main__':
         [1,0]
     ])
 
-    mlp = MLP(n_features,n_hidden,n_out,TanhActivation(),LinearActivation())
-""""
+    X, Y = load_monk("monks-2.train")
+    X_val, Y_val = load_monk("monks-2.test")
+    n_features = 17
+    n_hidden = 3
+    n_out = 1
+    eta = 0.7
+    alpha = 0.7
+    lambd = 0
+
+    mlp = MLP(n_features,n_hidden,n_out,TanhActivation(),SigmoidActivation(),lambd=lambd,eta=eta,alfa=alpha,trainer=TrainBackprop())
+    mlp.trainer.train(mlp,addBias(X), Y, addBias(X_val), Y_val, 500, 1e-4)
+    """"
     print("Wh =\n",mlp.W_h)
     print("Wo =\n",mlp.W_o)
     print ("size Wh:", mlp.W_h.shape)
@@ -228,9 +215,12 @@ if __name__ == '__main__':
 
     a = check_strong_wolfe(0, 1, 0.1)
     print(a)
+    """
+""""
+    mlp.feedforward(addBias(X))
+    grad_W_h, grad_W_o  =  compute_gradient(mlp,X, Y,lambd)
+    loss = compute_obj_function(mlp,X,Y,lambd)
+    alpha = AWLS(mlp, X, Y, loss, grad_W_h, grad_W_o,lambd,alpha_0=alpha, m1=0.001)
+    print("Miglior alpha con AWLS= ",alpha)
 """
 
-mlp.feedforward(addBias(X))
-dW_o, dW_h  = mlp.backpropagation(addBias(X), Y)
-alpha = AWLS(mlp, X, Y, compute_Error(Y,mlp.Out_o), dW_h, dW_o,m1=0.9)
-print("Miglior alpha con AWLS= ",alpha)

@@ -7,17 +7,15 @@ Questo file contiene la classe MLP preposta ad implementare la rete neurale;
 
 """
 
-import numpy as np
-from Utility import *
-from Activation_Functions import *
-
+from Trainers.LineSearch import *
+from Trainers.TrainBackprop import *
 
 class MLP:
     "Costruttore classe con stati; NOTA: Inseriti Pesi con bias"
 
     def __init__(self, n_feature, n_hidden, n_output, activation_h, activation_o, eta=0.1, lambd=0, alfa=0.75,
                  fan_in_h=True, range_start_h=-0.7, range_end_h=0.7, fan_in_o=True, range_start_o=-0.7, range_end_o=0.7,
-                 classification=True):
+                 classification=True,trainer = TrainBackprop()):
         # Valori scalari
         # self.n_input = n_input  # righe di X
         self.n_feature = n_feature  # colonne di X, oppure neuroni input
@@ -59,6 +57,8 @@ class MLP:
         # Bool per Classificazione/Regressione
         self.classification = classification
 
+        self.trainer = trainer
+
     "FeedFoward: X con bias"
 
     def feedforward(self, X):
@@ -95,9 +95,10 @@ class MLP:
 
         return delta_W_o / X.shape[0], delta_W_h / X.shape[0]
 
-    "Train usando Backprop: The Basic Alg. (vedi Slide Corso ML)"
 
-    def train(self, X, T, X_val, T_val, n_epochs=1000, eps=10 ^ (-3), threshold=0.5, suppress_print=False):
+    "Train usando Backprop: The Basic Alg. (vedi Slide Corso ML)"
+    """
+    def train(self, X, T, X_val, T_val, n_epochs=1000, eps=10 ^ (-3), threshold=0.5, suppress_print=False, opt_a1=False):
         assert X.shape[0] == T.shape[0]
         # 1) Init pesi e iperparametri // fatto nel costruttore
 
@@ -146,6 +147,12 @@ class MLP:
             # TODO: A1
             # TODO: A2
 
+            # A1
+            if opt_a1:
+                loss = error_MSE # lamba=0
+                self.eta = AWLS(self, X, T, loss, -dW_h, -dW_o,0)
+
+            #self.eta = AWLS(self,X,T,error_MSE,dW_h,dW_o)
             dW_o_new = self.eta * dW_o + self.alfa * self.dW_o_old
             self.W_o = self.W_o + dW_o_new - (self.lambd * self.W_o)
 
@@ -193,12 +200,13 @@ class MLP:
         if suppress_print:
             if self.classification:
                 print(
-                    "Final Results: TR Error(MSE) : %s VL Error(MSE) : %s TR Accuracy((N-num_err)/N) : %s VL Accuracy((N-num_err)/N) : %s" % (
+                    "Final Results_CSV: TR Error(MSE) : %s VL Error(MSE) : %s TR Accuracy((N-num_err)/N) : %s VL Accuracy((N-num_err)/N) : %s" % (
                         self.errors_tr[-1], self.errors_vl[-1], self.accuracies_tr[-1], self.accuracies_vl[-1]))
             else:
                 print(
-                    "Final Results: TR Error(MSE) : %s VL Error(MSE) : %s TR (MEE) : %s VL (MEE) : %s" % (
+                    "Final Results_CSV: TR Error(MSE) : %s VL Error(MSE) : %s TR (MEE) : %s VL (MEE) : %s" % (
                         self.errors_tr[-1], self.errors_vl[-1], self.errors_mee_tr[-1], self.errors_mee_vl[-1]))
+    """
 
     "Classificazione: predizione"
 

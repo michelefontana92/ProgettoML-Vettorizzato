@@ -1,5 +1,5 @@
-from KFold import *
-from GridSearch import *
+from Validation.KFold import *
+from Validation.GridSearch import *
 
 """
 Effettua lo shuffling delle due matrici X e T

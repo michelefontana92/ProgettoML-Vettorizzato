@@ -1,7 +1,3 @@
-import numpy as np
-from MLP import *
-from Utility import *
-
 """
 Calcola blocchi di H_i secondo BFGS-N
 """

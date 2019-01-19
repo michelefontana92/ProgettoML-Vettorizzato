@@ -1,5 +1,5 @@
-from KFold import *
-
+from Validation.KFold import *
+from Utilities.Utility import *
 X = np.array([
     [1,1,1],
     [2,2,2],

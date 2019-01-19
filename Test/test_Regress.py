@@ -1,7 +1,7 @@
-from HoldOut import *
-from KFoldCV import *
+from Validation.HoldOut import *
+from Validation.KFoldCV import *
 from matplotlib import pyplot as plt
-
+from MLP.Activation_Functions import *
 
 
 eta_values = [0.02,0.01,0.05]
@@ -21,7 +21,7 @@ hold_out = False
 
 
 "fase di splitting Tr-Vl/TS  oppure load matrici nei file"
-P = loadMatrixFromFile("DatasetTrVl.csv")
+P = loadMatrixFromFile("../Datasets/DatasetTrVl.csv")
 X = P[:, : - 2]
 T = P[:, -2:]
 print(X.shape)
