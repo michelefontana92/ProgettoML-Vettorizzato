@@ -4,18 +4,18 @@ from matplotlib import pyplot as plt
 from MLP.Activation_Functions import *
 
 
-eta_values = [0.4, 0.6,0.65,0.9]
-alfa_values = [0.7,0.75, 0.8]
-hidden_values =[1,3,4,5]
-weight_values = [0.3, 0.7]
-lambda_values = [0,0.01,0.1]
-n_epochs = 450
-n_trials = 4
+eta_values = [0.4]
+alfa_values = [0.7]
+hidden_values =[3]
+weight_values = [0.7]
+lambda_values = [0]
+n_epochs = 500
+n_trials = 2
 k=3
 n_features = 17
 classifications = True
 
-X,T = load_monk("../Datasets/monks-3.train")
+X,T = load_monk("../Datasets/monks-2.train")
 
 "KFOLD CV"  # Classificazione
 best_eta,best_alfa,best_hidden,best_lambda,best_weight,best_mean_vl_error,best_std_vl_error=kFoldCV(n_features,X,T,k,500,

@@ -107,10 +107,10 @@ class TrainBackprop(Training):
         if suppress_print:
             if mlp.classification:
                 print(
-                    "Final Results_CSV: TR Error(MSE) : %s VL Error(MSE) : %s TR Accuracy((N-num_err)/N) : %s VL Accuracy((N-num_err)/N) : %s" % (
+                    "Final Results: TR Error(MSE) : %s VL Error(MSE) : %s TR Accuracy((N-num_err)/N) : %s VL Accuracy((N-num_err)/N) : %s" % (
                         mlp.errors_tr[-1], mlp.errors_vl[-1], mlp.accuracies_tr[-1], mlp.accuracies_vl[-1]))
             else:
                 print(
-                    "Final Results_CSV: TR Error(MSE) : %s VL Error(MSE) : %s TR (MEE) : %s VL (MEE) : %s" % (
+                    "Final Results: TR Error(MSE) : %s VL Error(MSE) : %s TR (MEE) : %s VL (MEE) : %s" % (
                         mlp.errors_tr[-1], mlp.errors_vl[-1], mlp.errors_mee_tr[-1], mlp.errors_mee_vl[-1]))
 

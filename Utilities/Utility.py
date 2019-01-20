@@ -252,6 +252,17 @@ def loadMatrixFromFile(filename):
         return M
 
 
+"""
+Effettua lo shuffling delle due matrici X e T
+"""
+
+
+def shuffle_matrices(X, T):
+    M = np.concatenate((X, T), axis=1)
+    np.random.shuffle(M)
+    X_shuffled = M[:, :X.shape[1]]
+    T_shuffled = M[:, -T.shape[1]:]
+    return np.reshape(X_shuffled, (-1, X.shape[1])), np.reshape(T_shuffled, (-1, T.shape[1]))
 
 
 """
