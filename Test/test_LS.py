@@ -6,6 +6,7 @@ from Trainers.LineSearch import *
 from matplotlib import pyplot as plt
 
 if __name__ == '__main__':
+
     trainer = TrainBackPropLS()
     X, T = load_monk("../Datasets/monks-2.train")
     X_val, T_val = load_monk("../Datasets/monks-2.test")
