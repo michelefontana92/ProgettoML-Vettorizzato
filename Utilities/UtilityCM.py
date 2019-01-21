@@ -27,3 +27,12 @@ def compute_gradient(mlp,X, T,lambd):
     grad_o = grad_mse_o + (lambd * mlp.W_o)
     grad_h = grad_mse_h + (lambd * mlp.W_h)
     return grad_h, grad_o
+
+"""
+Trasforma 2 matrici in un unico vettore [X|Y]
+"""
+def matrix2vec(X,Y):
+    X_vett = np.reshape(X, (-1, 1))
+    Y_vett = np.reshape(Y, (-1, 1))
+    vect = np.concatenate((X_vett, Y_vett), axis=0)
+    return vect

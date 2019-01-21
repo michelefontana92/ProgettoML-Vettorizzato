@@ -174,11 +174,13 @@ mee = divido per N=num_pattern
 def compute_Regr_MEE(T, OUT):
     assert T.shape == OUT.shape
     n_examples = T.shape[0]
-
+    """
     D = OUT - T
     Q = D ** 2
     S = np.sum(Q, 1)
     R = np.sqrt(S)
+    """
+    R = np.linalg.norm(OUT - T,axis=1)
     scal = np.sum(R, 0)
     mee = scal / n_examples
 

@@ -7,7 +7,6 @@ Questo file contiene la classe MLP preposta ad implementare la rete neurale;
 
 """
 
-from Trainers.LineSearch import *
 from Trainers.TrainBackprop import *
 
 class MLP:

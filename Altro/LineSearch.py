@@ -1,41 +1,74 @@
-from MLP import *
-from Utilities.Utility import *
-import math
+from Utilities.UtilityCM import *
+from MLP.MLP import *
+from Monks.Monk import *
+from MLP.Activation_Functions import *
+"""
+def matrix2vec(X,Y):
+    X_vett = np.reshape(X, (-1, 1))
+    Y_vett = np.reshape(Y, (-1, 1))
+    vect = np.concatenate((X_vett, Y_vett), axis=0)
+    return vect
+
+def compute_obj_function(mlp,X,T,lambd):
+    mlp.feedforward(X)
+    mse = compute_Error(T,mlp.Out_o)
+    norm_w = np.linalg.norm(mlp.W_h)**2 + np.linalg.norm(mlp.W_o)**2
+    loss = mse + (0.5*lambd* norm_w)
+    return loss
 
 
-def f2phi(alpha,mlp,X,T,grad_W_h,grad_W_o,lambd):
+PER CM
+
+def compute_gradient(mlp,X, T,lambd):
+
+    m_grad_mse_o, m_grad_mse_h = mlp.backpropagation(X,T)
+    grad_mse_o = - m_grad_mse_o
+    grad_mse_h = - m_grad_mse_h
+    grad_o = grad_mse_o + (lambd * mlp.W_o)
+    grad_h = grad_mse_h + (lambd * mlp.W_h)
+    return grad_h, grad_o
+"""
+"""
+X ha già il bias
+gradE = gradiente di E (NON MENO GRADIENTE)
+phi_p_eta = <gradE_new_vec, -gradE_vec)>
+
+"""
+def f2phi(eta,mlp,X,T,gradE_h,gradE_o,lambd):
 
     #PESI ATTUALI
     W_h_current = mlp.W_h
     W_o_current = mlp.W_o
 
-    grad_W=vectorize(grad_W_h,grad_W_o)
-
-    #print("W_h",W_h_current)
-    #print("W_o",W_o_current)
+    print("W_h",W_h_current)
+    print("W_o",W_o_current)
 
     #SPOSTO I PESI LUNGO DELTA_W ( = - GRADIENTE)
-    mlp.W_h = mlp.W_h - (alpha * grad_W_h)
-    mlp.W_o = mlp.W_o - (alpha * grad_W_o)
+    mlp.W_h = mlp.W_h - (eta * gradE_h)
+    mlp.W_o = mlp.W_o - (eta * gradE_o)
 
     #CALCOLO E(w + alpha* delta_W)
-
-    phi_alpha = compute_obj_function(mlp,X,T,lambd)
+    phi_eta = compute_obj_function(mlp,X,T,lambd)
 
     # GRADIENTE CALCOLATO NEL NUOVO PUNTO
-    grad_W_o_new, grad_W_h_new = compute_gradient(mlp,X,T,lambd)
+    gradE_h_new, gradE_o_new = compute_gradient(mlp,X,T,lambd)
 
-    #METTO IL NUOVO GRADIENTE SOTTO FORMA DI UN UNICO VETTORE
-    grad_W_new = vectorize(grad_W_h_new, grad_W_o_new)
+    #METTO I GRADIENTI SOTTO FORMA DI VETTORE PER POTER FARE IL PRODOTTO SCALARE
 
-    #CALCOLO LA DERIVATA DI PHI
-    phi_prime = float(np.dot(grad_W_new.T, -grad_W))
+    gradE_vec = matrix2vec(gradE_h,gradE_o)
+    gradE_new_vec = matrix2vec(gradE_h_new,gradE_o_new)
+
+    phi_p_eta = float(np.dot(gradE_new_vec.T, -gradE_vec))
 
     #RIMETTO I PESI COME ERANO ALL'INIZIO DELLA FUNZIONE
     mlp.W_h = W_h_current
     mlp.W_o = W_o_current
 
-    return phi_alpha,phi_prime
+    print("W_h dopo phi", mlp.W_h)
+    print("W_o dopo phi", mlp.W_o)
+
+    return phi_eta, phi_p_eta
+
 
 """
 Controlla se la condizione di armijio è soddisfatta
@@ -61,6 +94,7 @@ def check_strong_wolfe(phi_prime_alpha,phi_prime_zero,m2):
 """
 AWLS
  NOTA: ordine dW_h, dW_o come matrici sul foglio...
+"""
 """
 def AWLS(mlp, X, T, loss, grad_W_h, grad_W_o, lambd, alpha_0=0.01, max_it=100, m1=0.001, m2=0.8, tau=0.925, epsilon=1e-6,mina=1e-12):
     phi_0 = loss
@@ -147,7 +181,7 @@ def quadratic_interpolation(alpha_0, mlp, X, T, grad_W_h, grad_W_o,gradE,lambd,p
                 break
 
     return alpha
-
+"""
 """
 -----------------
 TEST VARI.....
