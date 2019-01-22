@@ -37,7 +37,16 @@ class TrainBackPropLS(Training):
 
             if epoch == 0:
                 E = compute_obj_function(mlp, X, T, mlp.lambd)
-                mlp.errors_tr.append(E)
+
+                if mlp.classification:
+                    accuracy = compute_Accuracy_Class(T, convert2binary_class(mlp.Out_o, threshold))
+                    mlp.errors_tr.append(E)
+                    mlp.accuracies_tr.append(accuracy)
+                else:
+                    error_MEE = compute_Regr_MEE(T, mlp.Out_o)
+                    mlp.errors_tr.append(E)
+                    mlp.errors_mee_tr.append(error_MEE)
+
                 gradE_h, gradE_o = compute_gradient(mlp, X, T, mlp.lambd)
 
                 norm_gradE_0 = np.linalg.norm(gradE_h) ** 2 + np.linalg.norm(gradE_o) ** 2
@@ -45,13 +54,36 @@ class TrainBackPropLS(Training):
                 eps_prime = eps * norm_gradE_0
                 norm_gradE = norm_gradE_0
 
+                mlp.gradients.append(norm_gradE / norm_gradE_0)
+
             else:
                 E = compute_obj_function(mlp, X, T, mlp.lambd)
 
-                mlp.errors_tr.append(E)
+                if mlp.classification:
+                    accuracy = compute_Accuracy_Class(T, convert2binary_class(mlp.Out_o, threshold))
+                    mlp.errors_tr.append(E)
+                    mlp.accuracies_tr.append(accuracy)
+                else:
+                    error_MEE = compute_Regr_MEE(T, mlp.Out_o)
+                    mlp.errors_tr.append(E)
+                    mlp.errors_mee_tr.append(error_MEE)
 
                 gradE_h, gradE_o = compute_gradient(mlp, X, T, mlp.lambd)
                 norm_gradE = np.linalg.norm(gradE_h) ** 2 + np.linalg.norm(gradE_o) ** 2
+
+                mlp.gradients.append(norm_gradE / norm_gradE_0)
+
+             # CALCOLO IL VALIDATION ERROR
+            error_MSE_val = compute_obj_function(mlp, X_val, T_val, mlp.lambd)
+
+            if mlp.classification:
+                accuracy_val = compute_Accuracy_Class(T_val, convert2binary_class(mlp.Out_o, threshold))
+                mlp.errors_vl.append(error_MSE_val)
+                mlp.accuracies_vl.append(accuracy_val)
+            else:
+                error_MEE_val = compute_Regr_MEE(T_val, mlp.Out_o)
+                mlp.errors_vl.append(error_MSE_val)
+                mlp.errors_mee_vl.append(error_MEE_val)
 
             #CONTROLLO GRADIENTE
             if norm_gradE < eps_prime:
@@ -62,7 +94,7 @@ class TrainBackPropLS(Training):
                 mlp.eta = AWLS(mlp,X,T,E,gradE_h,gradE_o,mlp.lambd,self.eta_start,self.eta_max,self.max_iter,self.m1,self.m2,
                                self.tau,self.mina,self.sfgrd)
 
-                print("Epoca %s) Eta = %s"%(epoch+1,mlp.eta))
+                #print("Epoca %s) Eta = %s"%(epoch+1,mlp.eta))
 
                 #AGGIORNAMENTO
                 dW_o_new = -mlp.eta * gradE_o + mlp.alfa * mlp.dW_o_old
@@ -74,10 +106,58 @@ class TrainBackPropLS(Training):
                 mlp.dW_o_old = dW_o_new
                 mlp.dW_h_old = dW_h_new
 
+                # per stampa per ogni epoca
+                if not suppress_print:
+                    if mlp.classification:
+                        print(
+                            "Epoch %s/%s) Eta = %s ||gradE||/ ||gradE_0|| = %s,TR Error(MSE) : %s VL Error(MSE) : %s TR Accuracy((N-num_err)/N) : %s VL Accuracy((N-num_err)/N) : %s" % (
+                                epoch + 1,n_epochs, mlp.eta,norm_gradE/norm_gradE_0, E, error_MSE_val, accuracy, accuracy_val))
+                    else:
+                        print(
+                            "Epoch %s/%s) Eta = %s ||gradE||/ ||gradE_0|| = %s\nTR Error(MSE) : %s VL Error(MSE) : %s TR (MEE) : %s VL ((MEE) : %s" % (
+                                epoch + 1, n_epochs,mlp.eta,norm_gradE/norm_gradE_0,E, error_MSE_val, error_MEE, error_MEE_val))
+
                 epoch += 1
                 #CONTROLLO EPOCHE
                 if epoch >= n_epochs:
                     done_max_epochs = True
+
+
+        #CALCOLO ERRORE DOPO L'ULTIMO AGGIORNAMENTO
+
+        E = compute_obj_function(mlp, X, T, mlp.lambd)
+
+        if mlp.classification:
+            accuracy = compute_Accuracy_Class(T, convert2binary_class(mlp.Out_o, threshold))
+            mlp.errors_tr.append(E)
+            mlp.accuracies_tr.append(accuracy)
+        else:
+            error_MEE = compute_Regr_MEE(T, mlp.Out_o)
+            mlp.errors_tr.append(E)
+            mlp.errors_mee_tr.append(error_MEE)
+
+        error_MSE_val = compute_obj_function(mlp, X_val, T_val, mlp.lambd)
+
+        if mlp.classification:
+            accuracy_val = compute_Accuracy_Class(T_val, convert2binary_class(mlp.Out_o, threshold))
+            mlp.errors_vl.append(error_MSE_val)
+            mlp.accuracies_vl.append(accuracy_val)
+
+        else:
+            error_MEE_val = compute_Regr_MEE(T_val, mlp.Out_o)
+            mlp.errors_vl.append(error_MSE_val)
+            mlp.errors_mee_vl.append(error_MEE_val)
+
+        # per stampa di risultato finale
+        if suppress_print:
+            if mlp.classification:
+                print(
+                    "Final Results: ||gradE||/ ||gradE_0|| = %s\nTR Error(MSE) : %s VL Error(MSE) : %s TR Accuracy((N-num_err)/N) : %s VL Accuracy((N-num_err)/N) : %s" % (
+                        norm_gradE / norm_gradE_0,mlp.errors_tr[-1], mlp.errors_vl[-1], mlp.accuracies_tr[-1], mlp.accuracies_vl[-1]))
+            else:
+                print(
+                    "Final Results:||gradE||/ ||gradE_0|| = %s\nTR Error(MSE) : %s VL Error(MSE) : %s TR (MEE) : %s VL (MEE) : %s" % (
+                        norm_gradE /norm_gradE_0,mlp.errors_tr[-1], mlp.errors_vl[-1], mlp.errors_mee_tr[-1], mlp.errors_mee_vl[-1]))
 
         if found_optimum:
             vettore_hidden = np.reshape(mlp.W_h,(-1,1))
@@ -93,11 +173,3 @@ class TrainBackPropLS(Training):
             vettore_finale = np.concatenate((vettore_hidden, vettore_out), axis=0)
             print("VALORI FINALI(NON OTTIMI):\nE = %3f\nnorma gradE/gradE_0 =%s\nW_star=\n%s" % (
             E, norm_gradE / norm_gradE_0, vettore_finale.T))
-
-
-
-
-
-
-
-

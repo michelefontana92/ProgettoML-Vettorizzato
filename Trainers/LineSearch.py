@@ -59,7 +59,7 @@ def check_strong_wolfe(phi_prime_alpha,phi_prime_zero,m2):
     return abs(phi_prime_alpha) <= -m2 * phi_prime_zero
 
 
-def AWLS(mlp,X,T,phi_0,gradE_h,gradE_o,lambd,eta_start=1,eta_max=20,max_iter=100,m1=0.001,m2=0.9,tau = 0.9,mina=1e-16,sfgrd = 0.001):
+def AWLS(mlp,X,T,phi_0,gradE_h,gradE_o,lambd,eta_start=1,eta_max=20,max_iter=100,m1=0.001,m2=0.9,tau = 0.9,mina=1e-16,sfgrd = 0.001,debug=False):
 
     assert eta_start > 0
     assert eta_max > eta_start
@@ -96,12 +96,14 @@ def AWLS(mlp,X,T,phi_0,gradE_h,gradE_o,lambd,eta_start=1,eta_max=20,max_iter=100
 
 
         phi_eta, phi_p_eta = f2phi(eta,mlp,X,T,gradE_h,gradE_o,lambd)
-        print("[AWLS] Iterazione %s) Eta = %3f Eta_Max = %3f Phi(eta) =%s Phi'(eta)=%s"%(it +1,eta,eta_max,phi_eta,phi_p_eta))
+
+        if debug:
+            print("[AWLS] Iterazione %s) Eta = %3f Eta_Max = %3f Phi(eta) =%s Phi'(eta)=%s"%(it +1,eta,eta_max,phi_eta,phi_p_eta))
 
         if (not check_armijio(phi_0,phi_p_0,phi_p_eta,m1,eta)) or (phi_eta >= phi_eta_prec):
 
             eta_star = zoom(mlp,X,T,gradE_h,gradE_o,lambd,eta_prec,eta,phi_eta_prec,phi_eta,phi_p_eta_prec,phi_p_eta,
-                            phi_0,phi_p_0,m1,m2,max_iter,mina,sfgrd)
+                            phi_0,phi_p_0,m1,m2,max_iter - it,mina,sfgrd)
             done_interpolation = True
 
         elif check_strong_wolfe(phi_p_eta,phi_p_0,m2):
@@ -111,7 +113,7 @@ def AWLS(mlp,X,T,phi_0,gradE_h,gradE_o,lambd,eta_start=1,eta_max=20,max_iter=100
 
         elif phi_p_eta >= 0:
             eta_star = zoom(mlp,X,T,gradE_h,gradE_o,lambd,eta,eta_prec,phi_eta,phi_eta_prec,phi_p_eta,phi_p_eta_prec,
-                            phi_0,phi_p_0,m1,m2,max_iter,mina,sfgrd)
+                            phi_0,phi_p_0,m1,m2,max_iter - it,mina,sfgrd)
             done_interpolation = True
 
         else:
@@ -147,7 +149,7 @@ def AWLS(mlp,X,T,phi_0,gradE_h,gradE_o,lambd,eta_start=1,eta_max=20,max_iter=100
 
 
 def zoom(mlp,X,T,gradE_h,gradE_o,lambd,eta_l,eta_h,phi_eta_l,phi_eta_h,phi_p_eta_l,phi_p_eta_h,phi_0,phi_p_0,m1,m2,
-         max_iters,mina,sfgrd):
+         max_iters,mina,sfgrd,debug=False):
 
     #print("ENTRO IN ZOOM")
     eta_low = eta_l
@@ -166,8 +168,8 @@ def zoom(mlp,X,T,gradE_h,gradE_o,lambd,eta_l,eta_h,phi_eta_l,phi_eta_h,phi_p_eta
     it = 0
     while (not satisfied_aw) and (not done_max_iters) and (not too_close):
 
-
-        print("[ZOOM] Iterazione %s) Faccio interpolazione in [%s,%s]"%(it+1,eta_low,eta_high))
+        if debug:
+            print("[ZOOM] Iterazione %s) Faccio interpolazione in [%s,%s]"%(it+1,eta_low,eta_high))
 
         if abs(eta_high - eta_low) <= mina:
             eta_star = eta_low
@@ -177,7 +179,8 @@ def zoom(mlp,X,T,gradE_h,gradE_o,lambd,eta_l,eta_h,phi_eta_l,phi_eta_h,phi_p_eta
             eta = ( (eta_low * phi_p_eta_high) - (eta_high * phi_p_eta_low)) / (phi_p_eta_high - phi_p_eta_low)
             eta = max([min([eta_low,eta_high]) * (1 + sfgrd), min([max([eta_low,eta_high]) * (1 - sfgrd), eta])])
 
-            print("[ZOOM] Eta interpolato = ",eta)
+            if debug:
+                print("[ZOOM] Eta interpolato = ",eta)
 
             phi_eta, phi_p_eta = f2phi(eta,mlp,X,T,gradE_h,gradE_o,lambd)
 
@@ -216,7 +219,8 @@ def zoom(mlp,X,T,gradE_h,gradE_o,lambd,eta_l,eta_h,phi_eta_l,phi_eta_h,phi_p_eta
     elif satisfied_aw:
         print("[ZOOM] Soddisfatte AW")
 
-    print("[ZOOM] Eta restituito = ",eta_star)
+    if debug:
+        print("[ZOOM] Eta restituito = ",eta_star)
 
     return eta_star
 

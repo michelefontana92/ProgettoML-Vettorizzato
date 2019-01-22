@@ -49,6 +49,8 @@ class MLP:
         self.errors_mee_tr = []  # MEE sul TR
         self.errors_mee_vl = []  # MEE sulla VL
 
+        self.gradients = [] #Lista dei gradienti
+
         # Servono nella fase di train->backperopagation; delta vecchio dei pesi hidden e output
         self.dW_o_old = np.zeros(self.W_o.shape)
         self.dW_h_old = np.zeros(self.W_h.shape)
