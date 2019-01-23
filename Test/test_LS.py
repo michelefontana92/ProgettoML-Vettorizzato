@@ -25,19 +25,19 @@ if __name__ == '__main__':
     mlp = MLP(n_features, n_hidden, n_out, TanhActivation(), LinearActivation(),lambd=lambd, eta=eta, alfa=alpha,trainer=trainer,classification=classification)
 
     #train(self, mlp, X, T, X_val, T_val, n_epochs=1000, eps=1e-6, threshold=0.5, suppress_print=False):
-    mlp.trainer.train(mlp,addBias(X),T,addBias(X),T,n_epochs=100000,eps=1e-7)
+    mlp.trainer.train(mlp,addBias(X),T,addBias(X),T,n_epochs=10000,eps=1e-7)
 
     #PLOT DELLE LEARNING CURVE...
     plt.plot(mlp.errors_tr)
     plt.plot(mlp.errors_vl)
     plt.grid(True)
-    #plt.ylim((0,10))
+    plt.ylim((0,10))
     plt.show()
 
     plt.plot(mlp.errors_mee_tr)
     plt.plot(mlp.errors_mee_vl)
     plt.grid(True)
-    #plt.ylim((0, 10))
+    plt.ylim((0, 10))
     plt.show()
 
     #PLOT DEL GRADIENTE...

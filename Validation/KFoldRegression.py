@@ -40,15 +40,15 @@ def KFoldRegression(n_features, X, T, k, n_epochs, hidden_act, output_act, eta_v
                         """
                         Apro il file
                         """
-                        with open("%s_eta_%s_alpha_%s_lambd_%s_hidd_%s_weight_%s.csv" % (
-                                save_path_results, eta, alfa, lambd, hidden, weight), "w") as f:
+                        with open("%s_eta_%s_alpha_%s_lambd_%s_hidd_%s_weight_%s_trials_%s_k_%s.csv" % (
+                                save_path_results, eta, alfa, lambd, hidden, weight,n_trials,k), "w") as f:
 
                             """
                             Scrivo prime info su file
                             """
                             f.write("Metrica usata per model selection = MEE\n")
-                            f.write("Eta = %s Alpha = %s Lambda = %s Numero hidden units = %s Weight initialization = [-%s,+%s]\n" % (
-                                    eta, alfa, lambd, hidden, weight, weight))
+                            f.write("Eta = %s Alpha = %s Lambda = %s Numero hidden units = %s Weight initialization = [-%s,+%s] trials = %s k = %s\n" % (
+                                    eta, alfa, lambd, hidden, weight, weight,n_trials,k))
 
                             """
                             PER OGNI FOLD: ...
@@ -80,7 +80,7 @@ def KFoldRegression(n_features, X, T, k, n_epochs, hidden_act, output_act, eta_v
                                 Scrivo risultato su fold idx
                                 """
                                 f.write(
-                                    "FOLD %s: TR ERROR (MSE)= %3f +- %3f TR ERROR (MSE) = %3f +- %3f VL ERROR (MEE) = %3f +- %3f VL ERROR (MEE) = %3f +- %3f\n" % (
+                                    "FOLD %s: TR ERROR (MSE)= %3f +- %3f TR ERROR (MEE) = %3f +- %3f VL ERROR (MSE) = %3f +- %3f VL ERROR (MEE) = %3f +- %3f\n" % (
                                         idx + 1,
                                         mean_err_tr[-1], std_err_tr[-1], mean_error_MEE_tr[-1], std_error_MEE_tr[-1],
                                         mean_err_vl[-1], std_err_vl[-1], mean_error_MEE_vl[-1], std_error_MEE_vl[-1]
@@ -142,8 +142,8 @@ def KFoldRegression(n_features, X, T, k, n_epochs, hidden_act, output_act, eta_v
                             """
 
                             fig = plt.figure()
-                            st = plt.suptitle("%s\neta=%s alpha=%s lambda=%s n_hidden=%s weight=%s" % (
-                                title_plot, eta, alfa, lambd, hidden, weight))
+                            st = plt.suptitle("%s\neta=%s alpha=%s lambda=%s n_hidden=%s weight=%s trials=%s k=%s" % (
+                                title_plot, eta, alfa, lambd, hidden, weight,n_trials,k))
                             plt.subplot(2, 1, 1)
                             plt.plot(mean_err_tr_list, label='Training Error', ls="-")
 
@@ -159,6 +159,7 @@ def KFoldRegression(n_features, X, T, k, n_epochs, hidden_act, output_act, eta_v
                                              np.reshape(mean_err_vl_list + std_err_vl_list, n_epochs + 1, -1),
                                              color="orange", alpha=0.2)
 
+                            plt.ylim([0, 10])
                             plt.ylabel('MSE')
                             plt.grid(True)
                             plt.xlabel('epoch')
@@ -181,6 +182,7 @@ def KFoldRegression(n_features, X, T, k, n_epochs, hidden_act, output_act, eta_v
 
                             plt.ylabel('MEE')
                             plt.grid(True)
+                            plt.ylim([0,10])
                             plt.xlabel('epoch')
                             plt.legend(loc='upper right', prop={'size': 12})
                             plt.subplots_adjust(hspace=0.5)
@@ -189,6 +191,67 @@ def KFoldRegression(n_features, X, T, k, n_epochs, hidden_act, output_act, eta_v
                             SALVO LA LEARNING CURVE SU FILE
                             """
                             plt.savefig("%s_eta_%s_alpha_%s_lambd_%s_hidd_%s_weight_%s.jpg" % (
+                                save_path_plot, eta, alfa, lambd, hidden, weight))
+                            # plt.show()
+                            plt.close(fig)
+
+
+
+                            """
+                            FACCIO LA SECONDA CURVA (NON SCALATA!!!)
+                            
+                            """
+
+                            fig = plt.figure()
+                            st = plt.suptitle("%s\neta=%s alpha=%s lambda=%s n_hidden=%s weight=%s trials=%s k=%s" % (
+                                title_plot, eta, alfa, lambd, hidden, weight, n_trials, k))
+                            plt.subplot(2, 1, 1)
+                            plt.plot(mean_err_tr_list, label='Training Error', ls="-")
+
+                            plt.plot(mean_err_vl_list, label='Validation Error', ls="dashed")
+
+                            plt.fill_between(range(0, n_epochs + 1),
+                                             np.reshape(mean_err_tr_list - std_err_tr_list, n_epochs + 1, -1),
+                                             np.reshape(mean_err_tr_list + std_err_tr_list, n_epochs + 1, -1),
+                                             color="b", alpha=0.2)
+
+                            plt.fill_between(range(0, n_epochs + 1),
+                                             np.reshape(mean_err_vl_list - std_err_vl_list, n_epochs + 1, -1),
+                                             np.reshape(mean_err_vl_list + std_err_vl_list, n_epochs + 1, -1),
+                                             color="orange", alpha=0.2)
+
+                            #plt.ylim([0, 10])
+                            plt.ylabel('MSE')
+                            plt.grid(True)
+                            plt.xlabel('epoch')
+                            plt.legend(loc='upper right', prop={'size': 12})
+
+                            plt.subplot(2, 1, 2)
+                            plt.plot(mean_err_tr_MEE_list, label='Training MEE', ls="-")
+
+                            plt.plot(mean_err_vl_MEE_list, label='Validation MEE', ls="dashed")
+
+                            plt.fill_between(range(0, n_epochs + 1),
+                                             np.reshape(mean_err_tr_MEE_list - std_err_tr_MEE_list, n_epochs + 1, -1),
+                                             np.reshape(mean_err_tr_MEE_list + std_err_tr_MEE_list, n_epochs + 1, -1),
+                                             color="b", alpha=0.2)
+
+                            plt.fill_between(range(0, n_epochs + 1),
+                                             np.reshape(mean_err_vl_MEE_list - std_err_vl_MEE_list, n_epochs + 1, -1),
+                                             np.reshape(mean_err_vl_MEE_list + std_err_vl_MEE_list, n_epochs + 1, -1),
+                                             color="orange", alpha=0.2)
+
+                            plt.ylabel('MEE')
+                            plt.grid(True)
+                            # plt.ylim([0,10])
+                            plt.xlabel('epoch')
+                            plt.legend(loc='upper right', prop={'size': 12})
+                            plt.subplots_adjust(hspace=0.5)
+
+                            """
+                            SALVO LA LEARNING CURVE SU FILE
+                            """
+                            plt.savefig("%s_eta_%s_alpha_%s_lambd_%s_hidd_%s_weight_%s_normale.jpg" % (
                                 save_path_plot, eta, alfa, lambd, hidden, weight))
                             # plt.show()
                             plt.close(fig)

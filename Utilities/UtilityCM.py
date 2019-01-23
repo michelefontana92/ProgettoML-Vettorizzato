@@ -36,3 +36,16 @@ def matrix2vec(X,Y):
     Y_vett = np.reshape(Y, (-1, 1))
     vect = np.concatenate((X_vett, Y_vett), axis=0)
     return vect
+
+"""
+Bias già inserito
+"""
+def vec2matrix(X,shape_h,shape_o):
+    W_h = X[:(shape_h[0] * shape_h[1])]
+    W_o = X[-(shape_o[0] * shape_o[1]):]
+    W_h = np.reshape(W_h, (shape_h[0], shape_h[1]))
+    W_o = np.reshape(W_o, (shape_o[0], shape_o[1]))
+
+    return W_h, W_o
+
+
