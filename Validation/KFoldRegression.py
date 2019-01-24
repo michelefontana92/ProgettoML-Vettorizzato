@@ -9,7 +9,7 @@ KFold per regressione
 """
 def KFoldRegression(n_features, X, T, k, n_epochs, hidden_act, output_act, eta_values, alfa_values, hidden_values,
                     weight_values, lambda_values, n_trials, shuffle=True, title_plot = "ML CUP", save_path_plot="../Plots/cup",
-                    save_path_results="../Results_CSV/cup"):
+                    save_path_results="../Results_CSV/cup",window_size = 1):
     if shuffle:
         X, T = shuffle_matrices(X, T)
 
@@ -159,7 +159,10 @@ def KFoldRegression(n_features, X, T, k, n_epochs, hidden_act, output_act, eta_v
                                              np.reshape(mean_err_vl_list + std_err_vl_list, n_epochs + 1, -1),
                                              color="orange", alpha=0.2)
 
-                            plt.ylim([0, 10])
+                            ylim_sup = mean_err_vl_MEE_list[-1] + window_size
+                            ylim_inf = max([mean_err_vl_MEE_list[-1] - window_size, 0])
+
+                            plt.ylim([ylim_inf,ylim_sup])
                             plt.ylabel('MSE')
                             plt.grid(True)
                             plt.xlabel('epoch')
@@ -182,7 +185,14 @@ def KFoldRegression(n_features, X, T, k, n_epochs, hidden_act, output_act, eta_v
 
                             plt.ylabel('MEE')
                             plt.grid(True)
-                            plt.ylim([0,10])
+
+
+                            ylim_sup = mean_err_vl_MEE_list[-1] + window_size
+                            ylim_inf = max([mean_err_vl_MEE_list[-1] - window_size,0])
+                            
+
+
+                            plt.ylim([ylim_inf,ylim_sup])
                             plt.xlabel('epoch')
                             plt.legend(loc='upper right', prop={'size': 12})
                             plt.subplots_adjust(hspace=0.5)

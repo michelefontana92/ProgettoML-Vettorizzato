@@ -47,7 +47,7 @@ REMEMBER=> Hyperparameter (esaustiva):
 
 def kFoldCV(n_features, X, T, k, n_epochs, hidden_act, output_act, eta_values, alfa_values, hidden_values,
             weight_values, lambda_values, n_trials, classification=True, shuffle=True, title_plot = "ML CUP", save_path_plot="../Plots/cup",
-            save_path_results="../Results_CSV/cup"):
+            save_path_results="../Results_CSV/cup",window_size = 2):
 
 
    if classification:
@@ -58,4 +58,4 @@ def kFoldCV(n_features, X, T, k, n_epochs, hidden_act, output_act, eta_values, a
    else:
        return KFoldRegression(n_features, X, T, k, n_epochs, hidden_act, output_act, eta_values, alfa_values, hidden_values,
                               weight_values, lambda_values, n_trials, shuffle=shuffle, title_plot = title_plot,
-                              save_path_plot=save_path_plot,save_path_results=save_path_results)
+                              save_path_plot=save_path_plot,save_path_results=save_path_results,window_size=window_size)
