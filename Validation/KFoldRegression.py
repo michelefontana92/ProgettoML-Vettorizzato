@@ -159,8 +159,8 @@ def KFoldRegression(n_features, X, T, k, n_epochs, hidden_act, output_act, eta_v
                                              np.reshape(mean_err_vl_list + std_err_vl_list, n_epochs + 1, -1),
                                              color="orange", alpha=0.2)
 
-                            ylim_sup = mean_err_vl_MEE_list[-1] + window_size
-                            ylim_inf = max([mean_err_vl_MEE_list[-1] - window_size, 0])
+                            ylim_sup = mean_err_vl_list[-1] + window_size
+                            ylim_inf = max([mean_err_vl_list[-1] - window_size, 0])
 
                             plt.ylim([ylim_inf,ylim_sup])
                             plt.ylabel('MSE')

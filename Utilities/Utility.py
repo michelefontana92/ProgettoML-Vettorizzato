@@ -380,7 +380,7 @@ def analyze_result_csv(path_folder,n_folds):
     for file in fileList:
 
        if not file == "__init__.py":
-        with open(path+file) as f:
+           with open(path+file) as f:
             print(path+file)
             for i in range(n_folds +2):
                 f.readline()
