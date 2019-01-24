@@ -7,6 +7,7 @@ Questo file contiene varie funzioni utilizzate dagli altri moduli del progetto.
 import numpy as np
 from sklearn.model_selection import train_test_split
 from MLP import *
+import os
 
 """
 Spitto internal set: TR e VL set, ma su  M = [X, T]
@@ -360,6 +361,41 @@ if __name__ == "__main__":
     P_t = P[:, -1]
     print(P_dataset)
     print(P_t)
+
+"""
+Analizza i file csv prodotti come risultati dalla kFoldCV.
+Trova il file contenente il minore errore di validazione.
+Restituisce il nome del file e il suo vl error
+
+:param path_folder: Path della cartella in cui sono contenuti i csv da analizzare
+:param n_folds: numero di folds usati nella kCV (parametro k)
+ 
+"""
+def analyze_result_csv(path_folder,n_folds):
+
+    best_vl_error = 1e5
+    best_file = ""
+    path = path_folder+"/"
+    fileList = os.listdir(path_folder)
+    for file in fileList:
+
+       if not file == "__init__.py":
+        with open(path+file) as f:
+            print(path+file)
+            for i in range(n_folds +2):
+                f.readline()
+
+            line_result = f.readline()
+            line=line_result.rstrip("\n").split(" ")
+            #print(line[-3:])
+            vl_error = float(line[-3])
+
+            if vl_error < best_vl_error:
+                best_vl_error = vl_error
+                best_file = path+file
+
+    return best_file, best_vl_error
+
 
 """
 Prove
