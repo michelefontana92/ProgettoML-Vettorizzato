@@ -1,4 +1,4 @@
-from Trainers.TrainBackPropLS import *
+from Trainers.TrainBackPropLS_old import *
 from Monks.Monk import *
 from MLP.MLP import *
 from MLP.Activation_Functions import *
