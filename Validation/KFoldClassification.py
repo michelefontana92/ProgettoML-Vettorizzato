@@ -1,3 +1,5 @@
+import sys
+sys.path.append("../")
 from Validation.KFold import *
 from Validation.GridSearch import *
 from Utilities.Utility import *
@@ -6,6 +8,7 @@ import matplotlib.pyplot as plt
 
 """
 KFold per classificazione
+Per descrizione parametri vedi KFoldCV
 """
 def KFoldClassification(n_features, X, T, k, n_epochs, hidden_act, output_act, eta_values, alfa_values, hidden_values,
                         weight_values, lambda_values, n_trials, shuffle=True, title_plot = "ML CUP", save_path_plot="../Plots/cup", save_path_results="../Results_CSV/cup"):

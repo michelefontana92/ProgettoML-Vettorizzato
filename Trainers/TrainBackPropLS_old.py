@@ -1,13 +1,28 @@
-from Utilities.UtilityCM import *
+import sys
+sys.path.append("../")
+from Utilities.UtilityCM2 import *
 from Trainers.Training import *
-from Trainers.LineSearch import *
+from Trainers.LineSearch_new import *
+
+
 import numpy as np
 
 """
-TODO: METTERE PARTE SU VALIDATION ERROR ETC...
+Effettua training con SGD con momentum e Line Search
 """
 class TrainBackPropLS(Training):
-
+    """
+       Inizializza gli iperparametri algoritmici
+       :param eta_start: Eta iniziale da provare durante la AWLS
+       :param eta_max: Eta massimo accettabile
+       :param max_iter: Numero massimo di iterazioni che AWLS può compiere
+       :param m1: Parametro della condizione di Armijo
+       :param m2: Parametro della condizione di Wolfe
+       :param tau : Parametro che indica di quanto devo incrementare eta nella prima fase di AWLS
+       :param sfgrd: Valore della safeguard. Serve ad assicurare che durante la fase di interpolazione,
+               l'ampiezza dell'intervallo diminuisca almeno di un fattore pari a sfgrd
+       :param mina: Indica quanto deve essere l'ampiezza minima dell'intervallo in cui fare interpolazione
+       """
     def __init__(self,eta_start=0.1,eta_max=2,max_iter=100,m1=0.0001,m2=0.9,tau=0.9,sfgrd = 0.001,mina=1e-16):
         self.eta_start = eta_start
         self.eta_max = eta_max
@@ -17,6 +32,7 @@ class TrainBackPropLS(Training):
         self.tau = tau
         self.sfgrd = sfgrd
         self.mina = mina
+        self.it_AWLS_list = []
 
     def train(self,mlp,X, T, X_val, T_val, n_epochs = 1000, eps = 1e-12, threshold = 0.5, suppress_print = False):
 
@@ -91,8 +107,10 @@ class TrainBackPropLS(Training):
 
             if not found_optimum:
                 #LINE_SEARCH
-                mlp.eta = AWLS(mlp,X,T,E,gradE_h,gradE_o,mlp.lambd,self.eta_start,self.eta_max,self.max_iter,self.m1,self.m2,
-                               self.tau,self.mina,self.sfgrd)
+                mlp.eta,it_AWLS= AWLS(mlp,X,T,E,gradE_h,gradE_o,mlp.lambd,self.eta_start,self.eta_max,self.max_iter,self.m1,self.m2,
+                               self.tau,self.mina,self.sfgrd,l_bfgs=False)
+
+                self.it_AWLS_list.append(it_AWLS)
 
                 #print("Epoca %s) Eta = %s"%(epoch+1,mlp.eta))
 
@@ -158,7 +176,7 @@ class TrainBackPropLS(Training):
                 print(
                     "Final Results:||gradE||/ ||gradE_0|| = %s\nTR Error(MSE) : %s VL Error(MSE) : %s TR (MEE) : %s VL (MEE) : %s" % (
                         norm_gradE /norm_gradE_0,mlp.errors_tr[-1], mlp.errors_vl[-1], mlp.errors_mee_tr[-1], mlp.errors_mee_vl[-1]))
-
+        """
         if found_optimum:
             vettore_hidden = np.reshape(mlp.W_h,(-1,1))
             vettore_out = np.reshape(mlp.W_o,(-1,1))
@@ -173,3 +191,5 @@ class TrainBackPropLS(Training):
             vettore_finale = np.concatenate((vettore_hidden, vettore_out), axis=0)
             print("VALORI FINALI(NON OTTIMI):\nE = %3f\nnorma gradE/gradE_0 =%s\nW_star=\n%s" % (
             E, norm_gradE / norm_gradE_0, vettore_finale.T))
+        """
+        return len(mlp.errors_tr)

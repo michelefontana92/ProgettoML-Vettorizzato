@@ -1,15 +1,19 @@
+import sys
+sys.path.append("../")
 from Validation.KFold import *
 from Validation.GridSearch import *
 import matplotlib.pyplot as plt
 from Utilities.Utility import *
-
+from Trainers.TrainBackprop import *
+import math
 
 """
 KFold per regressione
+Per descrizione parametri vedi file KFoldCV
 """
 def KFoldRegression(n_features, X, T, k, n_epochs, hidden_act, output_act, eta_values, alfa_values, hidden_values,
                     weight_values, lambda_values, n_trials, shuffle=True, title_plot = "ML CUP", save_path_plot="../Plots/cup",
-                    save_path_results="../Results_CSV/cup",window_size = 1):
+                    save_path_results="../Results_CSV/cup",window_size = 1,trainer=TrainBackprop(),eps=1e-7):
     if shuffle:
         X, T = shuffle_matrices(X, T)
 
@@ -37,6 +41,7 @@ def KFoldRegression(n_features, X, T, k, n_epochs, hidden_act, output_act, eta_v
                         print("Provo eta=%s alfa=%s #hidden=%s weight=%s lambda = %s" % (
                             eta, alfa, hidden, weight, lambd))
 
+                        avg_epochs = 0
                         """
                         Apro il file
                         """
@@ -69,13 +74,16 @@ def KFoldRegression(n_features, X, T, k, n_epochs, hidden_act, output_act, eta_v
                                 print("FOLD ", idx + 1)
                                 X_tr, T_tr, X_vl, T_vl = split_dataset(X, T, folds, idx)
 
-                                mlp, mean_err_tr, std_err_tr, mean_error_MEE_tr, std_error_MEE_tr, mean_err_vl, std_err_vl, mean_error_MEE_vl, std_error_MEE_vl = run_trials(
+                                mlp, mean_err_tr, std_err_tr, mean_error_MEE_tr, std_error_MEE_tr, mean_err_vl, \
+                                std_err_vl, mean_error_MEE_vl, std_error_MEE_vl,epochs = run_trials(
                                     n_features, X_tr, T_tr, X_vl, T_vl, n_epochs, hidden_act, output_act, eta, alfa,
                                     hidden,
-                                    weight, lambd, n_trials,classification=False)
+                                    weight, lambd, n_trials,classification=False,trainer=trainer,eps=eps)
 
-                                print("FOLD %s: VL ERROR = %3f" % (idx + 1, mean_error_MEE_vl[-1]))
 
+                                print("FOLD %s: VL ERROR = %3f Epoche %s" % (idx + 1, mean_error_MEE_vl[-1],epochs))
+
+                                avg_epochs += epochs
                                 """
                                 Scrivo risultato su fold idx
                                 """
@@ -127,23 +135,32 @@ def KFoldRegression(n_features, X, T, k, n_epochs, hidden_act, output_act, eta_v
                                     std_err_vl_MEE_list[-1]
                                 ))
 
+
+                            avg_epochs = math.ceil(avg_epochs/k)
+
                             """
                             Salvo info finali della configurazione sui vari fold
                             """
                             f.write(
-                                "RISULTATO FINALE SUL FOLD: TR MSE = %3f +- %3f TR MEE = %3f +- %3f VL MSE = %3f +- %3f VL MEE = %3f +- %3f\n" % (
+                                "RISULTATO FINALE SUL FOLD: TR MSE = %3f +- %3f TR MEE = %3f +- %3f VL MSE = %3f +- %3f VL MEE = %3f +- %3f Epoche medie:%s\n" % (
                                     mean_err_tr_list[-1], std_err_tr_list[-1], mean_err_tr_MEE_list[-1], std_err_tr_MEE_list[-1],
                                     mean_err_vl_list[-1], std_err_vl_list[-1], mean_err_vl_MEE_list[-1],
-                                    std_err_vl_MEE_list[-1]
+                                    std_err_vl_MEE_list[-1],avg_epochs
                                 ))
+
+
 
                             """
                             FACCIO LA LEARNING CURVE
                             """
 
                             fig = plt.figure()
+                            """
                             st = plt.suptitle("%s\neta=%s alpha=%s lambda=%s n_hidden=%s weight=%s trials=%s k=%s" % (
                                 title_plot, eta, alfa, lambd, hidden, weight,n_trials,k))
+                            """
+                            st = plt.suptitle("%s\nlambda=%s n_hidden=%s weight=%s trials=%s k=%s" % (
+                                title_plot, lambd, hidden, weight, n_trials, k))
                             plt.subplot(2, 1, 1)
                             plt.plot(mean_err_tr_list, label='Training Error', ls="-")
 
@@ -189,10 +206,11 @@ def KFoldRegression(n_features, X, T, k, n_epochs, hidden_act, output_act, eta_v
 
                             ylim_sup = mean_err_vl_MEE_list[-1] + window_size
                             ylim_inf = max([mean_err_vl_MEE_list[-1] - window_size,0])
-                            
+
 
 
                             plt.ylim([ylim_inf,ylim_sup])
+                            plt.xlim([0,avg_epochs])
                             plt.xlabel('epoch')
                             plt.legend(loc='upper right', prop={'size': 12})
                             plt.subplots_adjust(hspace=0.5)

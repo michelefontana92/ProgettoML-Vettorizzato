@@ -1,3 +1,10 @@
+"""
+File usato per caricare e codificare usando 1-of-k il dataset del Monk
+"""
+
+import sys
+sys.path.append("../")
+
 import numpy as np
 from MLP import *
 # 2(target) 3  3  2  3 4 2
@@ -31,6 +38,10 @@ def encode_4(x):
     else:
         return (0,0,0,1)
 
+
+"""
+Carica monk da filename e lo codifica
+"""
 def load_monk(filename):
     with open(filename) as f:
         res = []

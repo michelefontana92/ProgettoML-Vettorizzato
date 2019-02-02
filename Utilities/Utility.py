@@ -2,7 +2,8 @@
 Questo file contiene varie funzioni utilizzate dagli altri moduli del progetto.
 
 """
-# TODO: RICONTROLLARE PER BENE QUESTE FUNZIONI E CERCARE FORMULA PER MEE!!!!!!!!!!!!!!!!!!
+import sys
+sys.path.append("../")
 
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -269,100 +270,6 @@ def shuffle_matrices(X, T):
 
 
 """
--------------------------------
-TEST VARI....
-------------------------------
-"""
-if __name__ == "__main__":
-    X = np.array([
-        [2, 3, 4],
-        [2, 3, 4]
-    ])
-
-    n_row = 4
-    n_col = 3
-
-    W = init_Weights(n_row, n_col, fan_in=True, range_start=0.1, range_end=0.3)
-    print("W = ", W)
-    print(W.shape)
-
-    T = np.array([
-        [1, 0],
-        [0, 2]
-    ])
-
-    Y = np.array([
-        [0, 1],
-        [2, 1]
-    ])
-
-    print("Error =", compute_Error(T, Y))
-
-    T = np.array([
-        [1],
-        [0],
-        [1],
-        [1]
-    ])
-
-    Y = np.array([
-        [0],
-        [1],
-        [1],
-        [1]])
-
-    print("Accuracy =", compute_Accuracy_Class(T, Y))
-
-    T = np.array([
-        [1, 0],
-        [0, 2]
-    ])
-
-    Y = np.array([
-        [0, 1],
-        [2, 1]
-    ])
-
-    dist = np.linalg.norm(T - Y)
-    print(dist)
-
-    a = np.array([1, 3])
-    b = np.array([2, 5])
-    dist2 = np.linalg.norm(a - b)
-    print(dist2)
-
-    O = np.array([
-        [1, 2],
-        [4, 5],
-        [5, 7]
-    ])
-
-    T = np.array([
-        [1, 3],
-        [5, 5],
-        [3, 7]
-    ])
-
-
-    """
-    Test per load/saveMatrix
-    """
-    M = np.array([
-        [1, 2, 3, 16],
-        [4, 5, 6, 17],
-        [7, 8, 9, 18],
-        [10, 11, 12, 19],
-        [13, 14, 15, 20]
-    ])
-
-    saveMatrix2File("prova.csv", M)
-    P = loadMatrixFromFile("prova.csv")
-    P_dataset = P[:, 0:P.shape[1]-1]
-    P_t = P[:, -1]
-    print(P_dataset)
-    print(P_t)
-
-"""
 Analizza i file csv prodotti come risultati dalla kFoldCV.
 Trova il file contenente il minore errore di validazione.
 Restituisce il nome del file e il suo vl error
@@ -370,6 +277,7 @@ Restituisce il nome del file e il suo vl error
 :param path_folder: Path della cartella in cui sono contenuti i csv da analizzare
 :param n_folds: numero di folds usati nella kCV (parametro k)
  
+"""
 """
 def analyze_result_csv(path_folder,n_folds):
 
@@ -395,52 +303,4 @@ def analyze_result_csv(path_folder,n_folds):
                 best_file = path+file
 
     return best_file, best_vl_error
-
-
 """
-Prove
-"""
-"""
-X = np.array([
-    [2, 3, 4],
-    [5, 6, 7],
-    [8, 9, 10],
-    [11, 12, 13],
-    [14, 15, 16],
-    [17, 18, 19],
-    [20, 21, 22],
-    [23, 24, 25],
-    [26, 27, 28],
-    [29, 30, 31]
-])
-
-T = np.array([[1],[2],[3],[4],[5],[6],[7],[8],[9],[10]])
-"""
-""""
-print "X:", X.shape
-print "T:", T.shape
-
-M = np.concatenate((X, T), axis=1)
-print "M:", M
-
-M_tr, M_vl = train_test_split(M, test_size=0.25)  # shuffle=True , train_size=0.75
-print "M_tr:", M_tr
-print "M_vl:", M_vl
-
-X_shuffled_tr = M_tr[:, :X.shape[1]]
-T_shuffled_tr = M_tr[:, -T.shape[1]:]
-X_shuffled_vl = M_vl[:, :X.shape[1]]
-T_shuffled_vl = M_vl[:, -T.shape[1]:]
-print "X_shuffled_tr", X_shuffled_tr
-print "T_shuffled_tr", T_shuffled_tr
-print "X_shuffled_vl", X_shuffled_vl
-print "T_shuffled_vl", T_shuffled_vl
-"""
-"""
-X_tr, T_tr, X_vl, T_vl = split_data_train_validation(X, T, 1)
-print "X_tr", X_tr
-print "T_tr", T_tr
-print "X_vl", X_vl
-print "T_vl", T_vl
-"""
-

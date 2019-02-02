@@ -1,3 +1,6 @@
+import sys
+sys.path.append("../")
+
 """
 File per eseguire lo splitting dei dati
 Da fare solo una volta!!!

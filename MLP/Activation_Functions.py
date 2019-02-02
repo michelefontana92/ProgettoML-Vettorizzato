@@ -1,3 +1,7 @@
+
+import sys
+sys.path.append("../")
+
 """
 Questo file contiene le varie funzioni di attivazione disponibili per la rete neurale.
 Le funzioni di attivazioni sono vettorizzate

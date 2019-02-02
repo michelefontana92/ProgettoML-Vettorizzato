@@ -1,6 +1,12 @@
+import sys
+sys.path.append("../")
+
 from Trainers.Training import *
 from Utilities.Utility import *
 
+""""
+Effettua lo standard SGD con momentum usando stepsize fissato.
+"""
 class TrainBackprop(Training):
 
     def train(self,mlp,X, T, X_val, T_val, n_epochs = 1000, eps = 10 ^ (-3), threshold = 0.5, suppress_print = False):
@@ -10,9 +16,6 @@ class TrainBackprop(Training):
         # 4) Condizioni di arresto
         error_MSE = 100
         for epoch in range(n_epochs):
-
-            if (error_MSE < eps):
-                break
 
             # 2) Effettuo la feedfoward;
             #   calcolo MSE class/regress (Learning Curve TR/VL), accuracy(accuracy curve TR/VL, class)/ MEE (regress);
@@ -114,3 +117,5 @@ class TrainBackprop(Training):
                     "Final Results: TR Error(MSE) : %s VL Error(MSE) : %s TR (MEE) : %s VL (MEE) : %s" % (
                         mlp.errors_tr[-1], mlp.errors_vl[-1], mlp.errors_mee_tr[-1], mlp.errors_mee_vl[-1]))
 
+
+        return len(mlp.errors_tr)

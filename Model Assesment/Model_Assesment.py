@@ -1,3 +1,13 @@
+"""
+File usato per effettuare:
+-retraining modello finale
+-assessment modello finale su test interno
+-produrre risultati per il blind test
+"""
+
+import sys
+sys.path.append("../")
+
 import numpy as np
 from Utilities.Utility import *
 from Trainers.TrainBackprop import *
@@ -6,6 +16,13 @@ from matplotlib import pyplot as plt
 from ML_CUP.LoadDataset import *
 from MLP.Activation_Functions import *
 
+"""
+Salve su file gli elementi della matrice M.
+La formattazione è quella necessaria per il blind test
+
+:param M : Matrice da salvare su file, contenente i risultati del blind test
+:param path_test: Path del file su cui salvare i risultati del blind test
+"""
 def saveBlindTestResults(M,path_test):
 
     with open(path_test,"w")as f:
@@ -28,6 +45,10 @@ def saveBlindTestResults(M,path_test):
 
     return
 
+"""
+Carica il dataset usato come internal test set.
+:return X_retrain, T_retrain,X_test,T_test
+"""
 def load_internal_test():
 
     P_retrain = loadMatrixFromFile("../Datasets/DatasetTrVl.csv")
@@ -40,19 +61,22 @@ def load_internal_test():
 
     return X_retrain,T_retrain,X_test,T_test
 
-
+"""
+Effettua il retraining del modello finale sull'intero dev set, testandolo su test set interno.
+Restituisce il modello finale.
+"""
 def model_assesment(n_features,
                     n_epochs, hidden_act, output_act, eta, alfa, n_hidden, weight, lambd,
                     n_trials, classification=False,trainer=TrainBackprop(),
                     title_plot="Plot Finale",save_path_plot="../RisultatiFinali/cupFinale",
-                    save_path_results="../RisultatiFinali/cupFinale"):
+                    save_path_results="../RisultatiFinali/cupFinale.txt"):
 
     window_size = 1
 
     X_retrain, T_retrain, X_test, T_test = load_internal_test()
 
     best_mlp, mean_err_tr, std_err_tr, mean_error_MEE_tr, std_error_MEE_tr, mean_err_test, \
-    std_err_test, mean_error_MEE_test, std_error_MEE_test = run_trials(
+    std_err_test, mean_error_MEE_test, std_error_MEE_test,epochs = run_trials(
         n_features,X_retrain,T_retrain,X_test,T_test,n_epochs, hidden_act, output_act,
         eta, alfa, n_hidden, weight, lambd,
         n_trials, classification=classification,trainer=trainer)
@@ -140,7 +164,11 @@ def model_assesment(n_features,
 
     return best_mlp
 
-
+"""
+Esegue il blind test e ne salva i risultati su file.
+:param mlp : modello finale
+:param path_blind_results: Path del file in cui salvare i risultati del blind test
+"""
 def blind_test(mlp,path_blind_results):
 
     X_test_blind = load_cup_dataset_blind("../Datasets/ML-CUP18-TS.csv")
@@ -148,17 +176,16 @@ def blind_test(mlp,path_blind_results):
     saveBlindTestResults(mlp.Out_o,path_blind_results)
     return
 
-
 if __name__ == "__main__":
 
-    eta = 0.045
-    alfa = 0.55
+    eta = 0.0525
+    alfa = 0.9
     hidden = 33
     weight = 0.7
-    lambd = 0.001
-    n_epochs = 7000
-    n_trials = 10
-    k = 5
+    lambd = 0.0075
+    n_epochs = 8000
+    n_trials = 7
+    k = 3
     n_features = 10
     window_size = 1
     classifications = False

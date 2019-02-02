@@ -1,3 +1,5 @@
+import sys
+sys.path.append("../")
 from MLP.MLP import *
 from Utilities.Utility import *
 
@@ -39,6 +41,7 @@ def matrix2vec(X,Y):
 
 """
 Bias già inserito
+Trasforma due vettori in una unica matrice
 """
 def vec2matrix(X,shape_h,shape_o):
     W_h = X[:(shape_h[0] * shape_h[1])]

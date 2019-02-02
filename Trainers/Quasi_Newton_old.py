@@ -1,18 +1,43 @@
+"""
+Questo file contiene l'implementazione del metodo del Quasi Newton a memoria limitata.
+L-BFGS
+"""
+import sys
+sys.path.append("../")
+
 from Trainers.Training import *
 import numpy as np
 from Utilities.UtilityCM import *
 from Utilities.Utility import *
-from Trainers.LineSearch import *
+from Trainers.LineSearch_old import *
 
 
 class L_BFGS(Training):
 
-    def __init__(self,eta_start=1,eta_max=2,max_iter=100,m1=0.0001,m2=0.9,tau=0.9,sfgrd = 0.001,mina=1e-16,m=3):
+    """
+    Inizializza gli iperparametri algoritmici
+    :param eta_start: Eta iniziale da provare durante la AWLS
+    :param eta_max: Eta massimo accettabile
+    :param max_iter_AWLS_train : Numero massimo di iterazioni che (in media) AWLS può compiere
+    :param m1: Parametro della condizione di Armijo
+    :param m2: Parametro della condizione di Wolfe
+    :param tau : Parametro che indica di quanto devo incrementare eta nella prima fase di AWLS
+    :param sfgrd: Valore della safeguard. Serve ad assicurare che durante la fase di interpolazione,
+            l'ampiezza dell'intervallo diminuisca almeno di un fattore pari a sfgrd
+    :param mina: Indica quanto deve essere l'ampiezza minima dell'intervallo in cui fare interpolazione
+    :param m : Indica la quantità di "memoria" usata dall'algoritmo L-BFGS. Tiene cioè in memoria informazioni
+                sulle ultime m iterazioni.
+
+    :param delta : Indica il fattore usato per l'inizializzazione di H0. H0 = delta*I
+    :param use_delta: Se true, indica che H0 deve essere inizializzato usando il fattore delta.
+                        Altrimenti usa formula descritta in Nocedal.
+    """
+    def __init__(self,eta_start=1,eta_max=2,max_iter_AWLS_train=100,m1=0.0001,m2=0.9,tau=0.9,sfgrd = 0.001,mina=1e-16,m=3, delta =0.01,use_delta=True):
 
         #PARAMETRI LS
         self.eta_start = eta_start # L-BFGS vuole AWLS=> passare alpha=1
         self.eta_max = eta_max
-        self.max_iter = max_iter
+        self.max_iter_AWLS_train = max_iter_AWLS_train
         self.m1 = m1
         self.m2 = m2
         self.tau = tau
@@ -22,59 +47,81 @@ class L_BFGS(Training):
         # PARAMETRI BFGS
         self.m = m
         self.s_y_list= []
+        self.H0 = None
+        self.delta = delta
+        self.use_delta = use_delta
 
+        self.it_AWLS_list = []
     """
     Calcolo H0 per calcolo direzione e per L-BFGS
     """
     def compute_H0(self):
 
-        sy = self.s_y_list[-1] #quello più recente
-        s = sy[0]
-        y = sy[1]
-        gamma = (s.T * y ) /(y.T * y)
-        H0 = gamma * np.eye(y.shape[0])
-        return H0
+        if not self.use_delta:
+            sy = self.s_y_list[-1] #quello più recente
+            s = sy[0]
+            y = sy[1]
+            gamma = (s.T * y ) /(y.T * y)
+            self.H0 = gamma * np.eye(y.shape[0])
+        else:
+            self.H0 = self.delta * np.eye(self.H0.shape[0])
+
 
     """
     L-BFGS two-loop recursion (vedi libro riferimento)
+    Calcola la direzione da usare
     """
-    def compute_direction(self, H0, gradE_vec):
+    def compute_direction(self,gradE_vec):
         #Liste da mettere ed init
         alpha_bfgs_list = []
         rho_list = []
         q = gradE_vec
-
         #primo loop
-        for sy in reversed(self.s_y_list):
-            s = sy[0]
-            y = sy[1]
-            print("s= %s,\ny=%s"%(s[0],y[0]))
+        try:
+            for sy in reversed(self.s_y_list):
+                s = sy[0]
+                y = sy[1]
+                #print("s= %s,\ny=%s"%(s[0],y[0]))
 
-            rho = float(1/np.dot(y.T, s))
-            print("Rho = ",rho)
-            rho_list.append(rho)
+                dot_p = np.dot(y.T, s)
+                if abs(dot_p) < 1e-10:
+                    if dot_p < -(1e-10):
+                        dot_p = -(1e-10)
+                    else:
+                        dot_p = (1e-10)
 
-            alpha_bfgs = float(rho*(np.dot(s.T,q)))
-            print("Alpha_BFGS = ", alpha_bfgs)
-            alpha_bfgs_list.append(alpha_bfgs)
 
-            q = q - (alpha_bfgs*y)
+                rho = float(1/dot_p)
+                #print(rho)
+                #print("Rho = ",rho)
+                rho_list.append(rho)
 
-        # calcolo r (vedi libro riferimento) e reverso le liste
-        r = np.dot(H0 ,q) # q ultima iterazione
-        rho_list.reverse()
-        alpha_bfgs_list.reverse()
+                alpha_bfgs = float(rho*(np.dot(s.T,q)))
+                #print("Alpha_BFGS = ", alpha_bfgs)
+                alpha_bfgs_list.append(alpha_bfgs)
 
-        #secondo loop
-        for (idx,sy) in enumerate(self.s_y_list):
-            s = sy[0]
-            y = sy[1]
-            rho = rho_list[idx]
-            beta = rho*(np.dot(y.T, r))
-            alpha_bfgs = alpha_bfgs_list[idx]
-            r = r + s*(alpha_bfgs - beta)
+                q = q - (alpha_bfgs*y)
 
-        return r
+            # calcolo r (vedi libro riferimento) e reverso le liste
+            r = np.dot(self.H0 ,q) # q ultima iterazione
+            rho_list.reverse()
+            alpha_bfgs_list.reverse()
+
+                #secondo loop
+            for (idx,sy) in enumerate(self.s_y_list):
+                s = sy[0]
+                y = sy[1]
+                rho = rho_list[idx]
+                beta = rho*(np.dot(y.T, r))
+                alpha_bfgs = alpha_bfgs_list[idx]
+                r = r + s*(alpha_bfgs - beta)
+
+
+            return r
+
+        except:
+            print("NUMPROBLEM")
+            return None
 
 
     def train(self,mlp,X, T, X_val, T_val, n_epochs = 1000, eps = 10 ^ (-3), threshold = 0.5, suppress_print = False):
@@ -82,7 +129,10 @@ class L_BFGS(Training):
         assert n_epochs > 0
         assert eps > 0
 
+        self.max_iter_AWLS_train *= n_epochs
+
         epoch = 0
+        n_iters_AWLS_train = 0
         norm_gradE_0 = 0.
         eps_prime = 0.
         norm_gradE = 0.
@@ -94,8 +144,9 @@ class L_BFGS(Training):
         done_max_epochs = False  # Fatte numero massimo iterazioni
         found_optimum = False  # Gradiente minore o uguale a eps_prime
         numerical_problems = False # rho oppure gamma problem
+        done_max_AWLS_iters_train = False #terminato il numero massimo di iterazioni complessive di AWLS
 
-        while (not done_max_epochs) and (not found_optimum) and (not numerical_problems):
+        while (not done_max_epochs) and (not done_max_AWLS_iters_train)and (not found_optimum) and (not numerical_problems):
 
             if epoch == 0:
                 E = compute_obj_function(mlp, X, T, mlp.lambd)
@@ -120,11 +171,13 @@ class L_BFGS(Training):
 
                 #METTO PESI E GRADIENTI COME VETTORE
                 w_vec = matrix2vec(mlp.W_h,mlp.W_o)
-                print("w_vec ",w_vec.shape)
+                #print("w_vec ",w_vec.shape)
                 gradE_vec_new = matrix2vec(gradE_h,gradE_o)
 
+                self.H0 = np.eye(gradE_vec_new.shape[0])
+
                 #APPENDO ALLA LISTA S_Y
-                self.s_y_list.append((w_vec,gradE_vec_new))
+                #self.s_y_list.append((np.zeros(w_vec.shape),np.zeros(gradE_vec_new.shape)))
 
             else:
                 # Calcolo funzione, gradiente, (s,y)
@@ -185,43 +238,57 @@ class L_BFGS(Training):
                 H0 = self.compute_H0()
 
                 # Calcolo direzione di = - ([approx_H]^-1)* gradE_vec // notare il meno!
-                di = - self.compute_direction(H0,gradE_vec_new)
+                di = self.compute_direction(gradE_vec_new)
 
-                # LINE_SEARCH
-                mlp.eta = AWLS(mlp, X, T, E, gradE_h, gradE_o, mlp.lambd, self.eta_start, self.eta_max, self.max_iter,
-                               self.m1, self.m2,
-                               self.tau, self.mina, self.sfgrd)
+                if di is None:
+                    numerical_problems = True
 
-                # print("Epoca %s) Eta = %s"%(epoch+1,mlp.eta))
+                if not numerical_problems:
+                    di = -di
+                    # LINE_SEARCH
+                    mlp.eta, it_AWLS = AWLS(mlp, X, T, E, gradE_h, gradE_o, mlp.lambd, self.eta_start, self.eta_max, self.max_iter_AWLS_train,
+                                   self.m1, self.m2,
+                                   self.tau, self.mina, self.sfgrd,l_bfgs=True)
 
-                # AGGIORNAMENTO: Warning!!!
-                ##NOTA: direzione gia col meno!
-                di_h, di_o = vec2matrix(di, mlp.W_h.shape, mlp.W_o.shape)
-                dW_o_new = mlp.eta * di_o
-                mlp.W_o = mlp.W_o + dW_o_new
+                    self.it_AWLS_list.append(it_AWLS)
+                    n_iters_AWLS_train += it_AWLS
 
-                dW_h_new = mlp.eta * di_h
-                mlp.W_h = mlp.W_h + dW_h_new
+                    # print("Epoca %s) Eta = %s"%(epoch+1,mlp.eta))
+
+                    # AGGIORNAMENTO: Warning!!!
+                    ##NOTA: direzione gia col meno!
+                    di_h, di_o = vec2matrix(di, mlp.W_h.shape, mlp.W_o.shape)
+                    dW_o_new = mlp.eta * di_o
+                    mlp.W_o = mlp.W_o + dW_o_new
+
+                    dW_h_new = mlp.eta * di_h
+                    mlp.W_h = mlp.W_h + dW_h_new
 
 
 
-                # per stampa per ogni epoca
-                if not suppress_print:
-                    if mlp.classification:
-                        print(
-                            "Epoch %s/%s) Eta = %s ||gradE||/ ||gradE_0|| = %s,TR Error(MSE) : %s VL Error(MSE) : %s TR Accuracy((N-num_err)/N) : %s VL Accuracy((N-num_err)/N) : %s" % (
-                                epoch + 1, n_epochs, mlp.eta, norm_gradE / norm_gradE_0, E, error_MSE_val, accuracy,
-                                accuracy_val))
-                    else:
-                        print(
-                            "Epoch %s/%s) Eta = %s ||gradE||/ ||gradE_0|| = %s\nTR Error(MSE) : %s VL Error(MSE) : %s TR (MEE) : %s VL ((MEE) : %s" % (
-                                epoch + 1, n_epochs, mlp.eta, norm_gradE / norm_gradE_0, E, error_MSE_val, error_MEE,
-                                error_MEE_val))
+                    # per stampa per ogni epoca
+                    if not suppress_print:
+                        if mlp.classification:
+                            print(
+                                "Epoch %s/%s) Eta = %s ||gradE||/ ||gradE_0|| = %s,TR Error(MSE) : %s VL Error(MSE) : %s TR Accuracy((N-num_err)/N) : %s VL Accuracy((N-num_err)/N) : %s" % (
+                                    epoch + 1, n_epochs, mlp.eta, norm_gradE / norm_gradE_0, E, error_MSE_val, accuracy,
+                                    accuracy_val))
+                        else:
+                            print(
+                                "Epoch %s/%s) Eta = %s ||gradE||/ ||gradE_0|| = %s\nTR Error(MSE) : %s VL Error(MSE) : %s TR (MEE) : %s VL ((MEE) : %s" % (
+                                    epoch + 1, n_epochs, mlp.eta, norm_gradE / norm_gradE_0, E, error_MSE_val, error_MEE,
+                                    error_MEE_val))
 
-                epoch += 1
-                # CONTROLLO EPOCHE
-                if epoch >= n_epochs:
-                    done_max_epochs = True
+                    epoch += 1
+
+                    # CONTROLLO EPOCHE
+                    if epoch >= n_epochs:
+                        done_max_epochs = True
+
+                    if n_iters_AWLS_train >= self.max_iter_AWLS_train:
+
+                        done_max_AWLS_iters_train = True
+
 
         # CALCOLO ERRORE DOPO L'ULTIMO AGGIORNAMENTO
 
@@ -257,10 +324,10 @@ class L_BFGS(Training):
                         mlp.accuracies_vl[-1]))
             else:
                 print(
-                    "Final Results:||gradE||/ ||gradE_0|| = %s\nTR Error(MSE) : %s VL Error(MSE) : %s TR (MEE) : %s VL (MEE) : %s" % (
+                    "Final Results:||gradE||/ ||gradE_0|| = %s\nTR Error(MSE) : %s VL Error(MSE) : %s TR (MEE) : %s VL (MEE) : %s Epochs: %s" % (
                         norm_gradE / norm_gradE_0, mlp.errors_tr[-1], mlp.errors_vl[-1], mlp.errors_mee_tr[-1],
-                        mlp.errors_mee_vl[-1]))
-
+                        mlp.errors_mee_vl[-1],len(mlp.errors_tr)))
+        """
         if found_optimum:
             vettore_hidden = np.reshape(mlp.W_h, (-1, 1))
             vettore_out = np.reshape(mlp.W_o, (-1, 1))
@@ -277,4 +344,9 @@ class L_BFGS(Training):
             print("VALORI FINALI(NON OTTIMI):\nE = %3f\nnorma gradE/gradE_0 =%s\nW_star=\n%s" % (
                 E, norm_gradE / norm_gradE_0, vettore_finale.T))
 
+        elif done_max_AWLS_iters_train:
+            print("Terminato per numero massimo di iterazioni totali di AWLS..")"""
+        if numerical_problems:
+            print("Ci sono stati problemi...")
 
+        return len(mlp.errors_tr)

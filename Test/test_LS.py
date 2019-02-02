@@ -1,8 +1,8 @@
-from Trainers.TrainBackPropLS import *
+from Trainers.TrainBackPropLS_old import *
 from Monks.Monk import *
 from MLP.MLP import *
 from MLP.Activation_Functions import *
-from Trainers.LineSearch import *
+from Trainers.LineSearch_old import *
 from matplotlib import pyplot as plt
 
 if __name__ == '__main__':
@@ -25,7 +25,7 @@ if __name__ == '__main__':
     mlp = MLP(n_features, n_hidden, n_out, TanhActivation(), LinearActivation(),lambd=lambd, eta=eta, alfa=alpha,trainer=trainer,classification=classification)
 
     #train(self, mlp, X, T, X_val, T_val, n_epochs=1000, eps=1e-6, threshold=0.5, suppress_print=False):
-    mlp.trainer.train(mlp,addBias(X),T,addBias(X),T,n_epochs=10000,eps=1e-7)
+    mlp.trainer.train(mlp,addBias(X),T,addBias(X),T,n_epochs=1000,eps=1e-7)
 
     #PLOT DELLE LEARNING CURVE...
     plt.plot(mlp.errors_tr)

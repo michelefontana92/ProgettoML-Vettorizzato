@@ -6,12 +6,33 @@ Questo file contiene la classe MLP preposta ad implementare la rete neurale;
 - MLP avra un bool per effettuare operazioni di classificazione oppure di regressione: classification
 
 """
+import sys
+sys.path.append("../")
 
 from Trainers.TrainBackprop import *
 
 class MLP:
     "Costruttore classe con stati; NOTA: Inseriti Pesi con bias"
-
+    """
+    :param n_feature : Numero di features
+    :param n_hidden : Numero neuroni nell'hidden layer
+    :param n_output : Numero neuroni nell'output layer
+    :param activation_h : Funzione di attivazione dell'hidden layer
+    :param activation_o : Funzione di attivazione dell'output layer
+    :param eta : Learning rate
+    :param lambd : Penalty term
+    :param alfa : Momentum
+    :param fan_in_h : Se true, usa il fan in nell'hidden layer per inizializzare i pesi
+    :param range_start_h, range_end_h : I pesi nell'hidden layer sono inizializzati con valori in [range_start_h, range_end_h]
+    :param fan_in_o : Se true, usa il fan in nell'output layer per inizializzare i pesi
+    :param range_start_h, range_end_h : I pesi nell'output layer sono inizializzati con valori in 
+                                        [range_start_o,range_end_o]
+    
+    :param classification: Se true, mlp deve risolvere un problema di classificazione(usato per sapere se
+                            riempire lista di accuracy o di MEE)
+    :param trainer: Indica quale algoritmo di ottimizzazione usare per la fase di training
+    
+    """
     def __init__(self, n_feature, n_hidden, n_output, activation_h, activation_o, eta=0.1, lambd=0, alfa=0.75,
                  fan_in_h=True, range_start_h=-0.7, range_end_h=0.7, fan_in_o=True, range_start_o=-0.7, range_end_o=0.7,
                  classification=True,trainer = TrainBackprop()):
@@ -96,118 +117,6 @@ class MLP:
 
         return delta_W_o / X.shape[0], delta_W_h / X.shape[0]
 
-
-    "Train usando Backprop: The Basic Alg. (vedi Slide Corso ML)"
-    """
-    def train(self, X, T, X_val, T_val, n_epochs=1000, eps=10 ^ (-3), threshold=0.5, suppress_print=False, opt_a1=False):
-        assert X.shape[0] == T.shape[0]
-        # 1) Init pesi e iperparametri // fatto nel costruttore
-
-        # 4) Condizioni di arresto
-        error_MSE = 100
-        for epoch in range(n_epochs):
-
-            if (error_MSE < eps):
-                break
-
-            # 2) Effettuo la feedfoward;
-            #   calcolo MSE class/regress (Learning Curve TR/VL), accuracy(accuracy curve TR/VL, class)/ MEE (regress);
-            #   calcolo delta_W usando backpropagation
-            self.feedforward(X)
-            # print "n_output:", self.n_output
-            # print "OUT_o", self.Out_o.shape
-            # print "Target", T.shape
-            error_MSE = compute_Error(T, self.Out_o)
-            if self.classification:
-                accuracy = compute_Accuracy_Class(T, convert2binary_class(self.Out_o, threshold))
-                self.errors_tr.append(error_MSE)
-                self.accuracies_tr.append(accuracy)
-            else:
-                error_MEE = compute_Regr_MEE(T, self.Out_o)
-                self.errors_tr.append(error_MSE)
-                self.errors_mee_tr.append(error_MEE)
-
-            dW_o, dW_h = self.backpropagation(X, T)
-
-            # CALCOLO IL VALIDATION ERROR
-            self.feedforward(X_val)
-            error_MSE_val = compute_Error(T_val, self.Out_o)
-            if self.classification:
-                accuracy_val = compute_Accuracy_Class(T_val, convert2binary_class(self.Out_o, threshold))
-                self.errors_vl.append(error_MSE_val)
-                self.accuracies_vl.append(accuracy_val)
-            else:
-                error_MEE_val = compute_Regr_MEE(T_val, self.Out_o)
-                self.errors_vl.append(error_MSE_val)
-                self.errors_mee_vl.append(error_MEE_val)
-
-            # 3) Upgrade weights
-
-            # TODO: LINE SEARCH-> CM+ML...
-            # TODO: A0
-            # TODO: A1
-            # TODO: A2
-
-            # A1
-            if opt_a1:
-                loss = error_MSE # lamba=0
-                self.eta = AWLS(self, X, T, loss, -dW_h, -dW_o,0)
-
-            #self.eta = AWLS(self,X,T,error_MSE,dW_h,dW_o)
-            dW_o_new = self.eta * dW_o + self.alfa * self.dW_o_old
-            self.W_o = self.W_o + dW_o_new - (self.lambd * self.W_o)
-
-            dW_h_new = self.eta * dW_h + self.alfa * self.dW_h_old
-            self.W_h = self.W_h + dW_h_new - (self.lambd * self.W_h)
-
-            self.dW_o_old = dW_o_new
-            self.dW_h_old = dW_h_new
-
-            # per stampa per ogni epoca
-            if not suppress_print:
-                if self.classification:
-                    print(
-                        "Epoch %s/%s) TR Error(MSE) : %s VL Error(MSE) : %s TR Accuracy((N-num_err)/N) : %s VL Accuracy((N-num_err)/N) : %s" % (
-                            epoch + 1, n_epochs, error_MSE, error_MSE_val, accuracy, accuracy_val))
-                else:
-                    print(
-                        "Epoch %s/%s) TR Error(MSE) : %s VL Error(MSE) : %s TR (MEE) : %s VL ((MEE) : %s" % (
-                            epoch + 1, n_epochs, error_MSE, error_MSE_val, error_MEE, error_MEE_val))
-
-        # CALCOLO ERRROR E ACCURACY/MEE FINALI (metto nelle liste)
-        self.feedforward(X)
-        error_MSE = compute_Error(T, self.Out_o)
-        if self.classification:
-            accuracy = compute_Accuracy_Class(T, convert2binary_class(self.Out_o, threshold))
-            self.errors_tr.append(error_MSE)
-            self.accuracies_tr.append(accuracy)
-        else:
-            error_MEE = compute_Regr_MEE(T, self.Out_o)
-            self.errors_tr.append(error_MSE)
-            self.errors_mee_tr.append(error_MEE)
-
-        self.feedforward(X_val)
-        error_MSE_val = compute_Error(T_val, self.Out_o)
-        if self.classification:
-            accuracy_val = compute_Accuracy_Class(T_val, convert2binary_class(self.Out_o, threshold))
-            self.errors_vl.append(error_MSE_val)
-            self.accuracies_vl.append(accuracy_val)
-        else:
-            error_MEE_val = compute_Regr_MEE(T_val, self.Out_o)
-            self.errors_vl.append(error_MSE_val)
-            self.errors_mee_vl.append(error_MEE_val)
-
-        # per stampa di risultato finale
-        if suppress_print:
-            if self.classification:
-                print(
-                    "Final Results_CSV: TR Error(MSE) : %s VL Error(MSE) : %s TR Accuracy((N-num_err)/N) : %s VL Accuracy((N-num_err)/N) : %s" % (
-                        self.errors_tr[-1], self.errors_vl[-1], self.accuracies_tr[-1], self.accuracies_vl[-1]))
-            else:
-                print(
-                    "Final Results_CSV: TR Error(MSE) : %s VL Error(MSE) : %s TR (MEE) : %s VL (MEE) : %s" % (
-                        self.errors_tr[-1], self.errors_vl[-1], self.errors_mee_tr[-1], self.errors_mee_vl[-1]))
-    """
 
     "Classificazione: predizione"
 
